@@ -1,19 +1,9 @@
-import { Text, View, StyleSheet } from "react-native";
-import Button from "@/components/Button";
-import { useRouter } from "expo-router";
+import { View, Text, StyleSheet } from "react-native";
 
-export default function HomeScreen() {
-  const router = useRouter();
-
-  const onReductionModal = () => {
-    router.navigate("/(modals)/reduction");
-  };
-
+export default function Reduction() {
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>SipSmart</Text>
-      <Text style={styles.text}>Your Mindful Drinking Journey Starts Here</Text>
-      <Button label="Start" onPress={onReductionModal} />
+      <Text style={styles.text}>Choose Alcohol Reduction Period:</Text>
     </View>
   );
 }

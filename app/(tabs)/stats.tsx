@@ -1,20 +1,12 @@
 import { Text, View, StyleSheet } from "react-native";
-import Button from "@/components/Button";
-import { useRouter } from "expo-router";
 
-export default function HomeScreen() {
-  const router = useRouter();
-
-  const onReductionModal = () => {
-    router.navigate("/(modals)/reduction");
-  };
-
+export default function Stats() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>SipSmart</Text>
-      <Text style={styles.text}>Your Mindful Drinking Journey Starts Here</Text>
-      <Button label="Start" onPress={onReductionModal} />
-    </View>
+    <>
+      <View style={styles.container}>
+        <Text style={styles.header}>Stats</Text>
+      </View>
+    </>
   );
 }
 
@@ -25,14 +17,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    fontSize: 30,
+    fontSize: 25,
     fontWeight: 300,
     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
     letterSpacing: 0.7,
   },
-  text: {
+  pledgeText: {
     marginTop: 20,
     fontSize: 16,
+    textAlign: "center",
+    fontWeight: 300,
+    fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
+    letterSpacing: 0.7,
+  },
+  question: {
+    marginBottom: 15,
+    marginTop: 20,
+    fontSize: 20,
     textAlign: "center",
     fontWeight: 300,
     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
