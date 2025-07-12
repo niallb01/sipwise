@@ -1,11 +1,19 @@
-import { StyleSheet, Pressable, Text, View } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  Text,
+  View,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 
 type Props = {
   label: string;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function Button({ label, onPress }: Props) {
+export default function Button({ label, onPress, style }: Props) {
   return (
     <>
       <Pressable style={styles.button} onPress={onPress}>

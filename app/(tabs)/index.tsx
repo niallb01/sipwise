@@ -1,6 +1,7 @@
 import { Text, View, StyleSheet } from "react-native";
 import Button from "@/components/Button";
 import { useRouter } from "expo-router";
+import { Picker } from "@react-native-picker/picker";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -12,7 +13,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>SipSmart</Text>
-      <Text style={styles.text}>Your Mindful Drinking Journey Starts Here</Text>
+      <Text style={styles.text}>
+        Your Alcohol Reduction Journey Starts Here
+      </Text>
       <Button label="Start" onPress={onReductionModal} />
     </View>
   );
@@ -25,7 +28,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 300,
     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
     letterSpacing: 0.7,
