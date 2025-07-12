@@ -6,7 +6,7 @@ export default function RootLayout() {
     <Provider>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modals" options={{ headerShown: false }} />
+        <Stack.Screen name="(modals)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </Provider>

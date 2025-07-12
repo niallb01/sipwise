@@ -1,32 +1,14 @@
+// app/(modals)/_layout.tsx
 import { Stack } from "expo-router";
 
 export default function ModalLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        presentation: "modal", // ✅ All modals are native-style
+        gestureEnabled: true, // ✅ Swipe to dismiss on iOS
+        headerShown: false, // 👌 Customize per screen if needed
       }}
-    >
-      <Stack.Screen
-        name="Reduction"
-        options={{
-          presentation: "modal",
-        }}
-      />
-    </Stack>
+    />
   );
 }
-
-// import { Stack } from "expo-router";
-
-// export default function ModalLayout() {
-//   return (
-//     <Stack
-//       screenOptions={{
-//         presentation: "modal", // <— important
-//         // gestureEnabled: true, // <— optional but helps
-//         headerShown: false,
-//       }}
-//     />
-//   );
-// }

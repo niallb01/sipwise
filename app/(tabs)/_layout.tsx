@@ -28,6 +28,19 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="current"
+          options={{
+            title: "Current",
+            tabBarIcon: ({ color, focused }: Props) => (
+              <Ionicons
+                name={focused ? "timer" : "timer-outline"}
+                color={color}
+                size={24}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="stats"
           options={{
             title: "Stats",
