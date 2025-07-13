@@ -1,7 +1,6 @@
 import { Text, View, StyleSheet } from "react-native";
 import Button from "@/components/Button";
 import { useRouter } from "expo-router";
-import { Picker } from "@react-native-picker/picker";
 
 export default function HomeScreen() {
   const router = useRouter();

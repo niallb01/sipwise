@@ -1,0 +1,59 @@
+// radioButtons.ts
+import { RadioButtonProps } from "react-native-radio-buttons-group";
+
+export const radioButtons: RadioButtonProps[] = [
+  {
+    id: "3",
+    label: "3 Days",
+    value: "3",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "7",
+    label: "7 Days",
+    value: "7",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "10",
+    label: "10 Days",
+    value: "10",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "14",
+    label: "14 Days",
+    value: "14",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "30",
+    label: "30 Days",
+    value: "30",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "60",
+    label: "60 Days",
+    value: "60",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+];

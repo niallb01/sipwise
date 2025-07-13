@@ -26,7 +26,7 @@ export default function Button({ label, onPress, style }: Props) {
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "#0071e3",
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 20,
     marginTop: 20,
