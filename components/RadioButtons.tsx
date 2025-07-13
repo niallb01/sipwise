@@ -56,4 +56,22 @@ export const radioButtons: RadioButtonProps[] = [
     borderColor: "#0071e3",
     borderSize: 1,
   },
+  {
+    id: "180",
+    label: "180 Days",
+    value: "180",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
+  {
+    id: "365",
+    label: "365 Days",
+    value: "365",
+    size: 18,
+    color: "#0071e3",
+    borderColor: "#0071e3",
+    borderSize: 1,
+  },
 ];

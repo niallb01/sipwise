@@ -1,72 +1,9 @@
-// import { radioButtons } from "@/components/RadioButtons";
-// import { useState } from "react";
-// import { View, StyleSheet, Text } from "react-native";
-// import RadioGroup from "react-native-radio-buttons-group"; // FIXED HERE
-
-// export default function ReductionOptions() {
-//   const [selectedId, setSelectedId] = useState<string | undefined>();
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.text}>Choose Alcohol Reduction Period:</Text>
-//       <RadioGroup
-//         radioButtons={radioButtons}
-//         onPress={setSelectedId}
-//         selectedId={selectedId}
-//         layout="row"
-//         containerStyle={styles.groupContainer}
-//         labelStyle={styles.label}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     padding: 16,
-//     alignItems: "center",
-//   },
-//   text: {
-//     marginTop: 20,
-//     fontSize: 16,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//   },
-//   groupContainer: {
-//     marginTop: 15,
-//     flexDirection: "row",
-//     flexWrap: "wrap",
-//     justifyContent: "flex-start",
-//     rowGap: 10,
-//     columnGap: 10,
-//     paddingHorizontal: 10,
-//   },
-//   label: {
-//     fontSize: 16,
-//     marginLeft: 8,
-//     marginRight: 12,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//   },
-// });
-
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { radioButtons } from "@/components/RadioButtons";
 
-export default function ReductionOptions() {
+export default function Reduction() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const screenWidth = Dimensions.get("window").width;
 
   return (
     <View style={styles.container}>
@@ -84,7 +21,7 @@ export default function ReductionOptions() {
                     borderColor: selected ? color : borderColor,
                     borderWidth: borderSize,
                     backgroundColor: selected ? color + "33" : "transparent",
-                    width: screenWidth - 32, // full width minus padding
+                    width: "100%", // full width of container
                   },
                 ]}
                 onPress={() => setSelectedId(id)}
@@ -122,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    marginTop: 20,
+    marginTop: 30,
     fontSize: 16,
     fontWeight: "300",
     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
@@ -131,6 +68,8 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     marginTop: 10,
+    width: "100%", // make container full width for buttons to fill
+    maxWidth: 400, // optional max width, adjust as needed
   },
   button: {
     flexDirection: "row",
@@ -147,5 +86,8 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "300",
+    fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
+    letterSpacing: 0.7,
+    textAlign: "center",
   },
 });
