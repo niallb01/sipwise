@@ -21,4 +21,6 @@ export const reductionOptionsAtom = atom<Record<number, number[]>>({
   365: [60, 90, 180, 270, 365], // 1 year options
 });
 
+export const selectedReductionDurationAtom = atom<number | null>(null);
+
 export const reductionTargetAtom = atom<number | null>(null);
