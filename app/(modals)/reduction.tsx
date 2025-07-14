@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
 } from "react-native";
+import { getRandomQuote } from "@/constants/reductionConstants";
 import { Picker } from "@react-native-picker/picker";
 import { useAtom } from "jotai";
 import {
@@ -32,8 +33,9 @@ export default function Reduction() {
     : [];
 
   const onConfirmModal = () => {
-    console.log("confirm");
-    setConfirmModal(true);
+    if (selectedDurationId && reductionTarget) {
+      setConfirmModal(true);
+    }
   };
 
   return (
@@ -62,7 +64,11 @@ export default function Reduction() {
                     width: "100%",
                   },
                 ]}
-                onPress={() => setSelectedDurationId(duration)}
+                // onPress={() => setSelectedDurationId(duration)}
+                onPress={() => {
+                  setSelectedDurationId(duration);
+                  setReductionTarget(null); // 👈 reset picker value
+                }}
               >
                 <View
                   style={[
@@ -94,7 +100,7 @@ export default function Reduction() {
           <Text style={[styles.text, { marginTop: 30 }]}>
             Choose Amount of Alcohol Free Days:
           </Text>
-          <Picker
+          {/* <Picker
             style={styles.picker}
             itemStyle={styles.pickerItem}
             mode="dropdown"
@@ -109,36 +115,29 @@ export default function Reduction() {
                 value={option}
               />
             ))}
+          </Picker> */}
+          <Picker
+            key={selectedDurationId} // 👈 Forces re-mount on duration change
+            selectedValue={reductionTarget}
+            onValueChange={(value) => setReductionTarget(value)}
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+            mode="dropdown"
+          >
+            <Picker.Item label="Select..." value={null} />
+            {availableOptions.map((option) => (
+              <Picker.Item
+                key={option}
+                label={`${option} Day${option === 1 ? "" : "s"}`}
+                value={option}
+              />
+            ))}
           </Picker>
         </View>
 
-        <View style={styles.loremContainer}>
+        <View style={styles.btnContainer}>
           <Button label={"Confirm"} onPress={onConfirmModal} />
         </View>
-        {/* <Modal
-          visible={confirmModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalText}>
-                Your reduction plan has been set!
-              </Text>
-              <Pressable
-                style={styles.overlay}
-                onPress={() => setConfirmModal(false)}
-              ></Pressable>
-              <Pressable
-                style={styles.modalContent}
-                onPress={(e) => e.stopPropagation()} // prevent close on inner press
-              ></Pressable>
-
-              <Button label={"Commit"} onPress={() => setConfirmModal(false)} />
-            </View>
-          </View>
-        </Modal> */}
 
         <Modal
           visible={confirmModal}
@@ -154,9 +153,17 @@ export default function Reduction() {
               style={styles.modalContent}
               onPress={(e) => e.stopPropagation()} // prevents close on content tap
             >
-              <Text style={styles.modalText}>
-                Your reduction plan has been set!
+              <Text style={styles.text}>
+                You are committing to {reductionTarget} alcohol-free{" "}
+                {Number(reductionTarget) === 1 ? "day" : "days"} out of the next{" "}
+                {selectedDurationId} days.
+                {"\n"}
               </Text>
+              <Text style={styles.text}>
+                {"\n"}
+                {getRandomQuote()}
+              </Text>
+
               <Button label="Commit" onPress={() => setConfirmModal(false)} />
             </Pressable>
           </Pressable>
@@ -178,7 +185,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
     textAlign: "center",
   },
-  loremContainer: {
+  btnContainer: {
     marginTop: 60,
     paddingHorizontal: 16,
     alignItems: "center",
@@ -233,21 +240,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     width: "80%",
-  },
-  modalText: {
-    fontSize: 16,
-    fontWeight: "400",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  modalButton: {
-    backgroundColor: "#2D9CDB",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  modalButtonText: {
-    color: "white",
-    fontWeight: "600",
   },
 });
