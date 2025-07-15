@@ -7,17 +7,15 @@ import { useAtom } from "jotai";
 import { getReductionQuote } from "@/constants/reductionConstants";
 
 export default function Current() {
-  const [selectedDurationId, setSelectedDurationId] = useAtom(
-    selectedReductionDurationAtom
-  );
-  const [reductionTarget, setReductionTarget] = useAtom(reductionTargetAtom);
+  const [selectedDurationId] = useAtom(selectedReductionDurationAtom);
+  const [reductionTarget] = useAtom(reductionTargetAtom);
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Your Current Alcohol Reduction Period:</Text>
 
       <Text style={styles.text}>
-        You are committing to {reductionTarget} alcohol-free{" "}
+        You have committed to {reductionTarget} alcohol-free{" "}
         {Number(reductionTarget) === 1 ? "day" : "days"} out of the next{" "}
         {selectedDurationId} days.
       </Text>

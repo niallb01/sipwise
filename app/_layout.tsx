@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { Provider } from "jotai";
+import "react-native-url-polyfill/auto";
 
 export default function RootLayout() {
   return (

@@ -7,6 +7,8 @@ import {
   Modal,
   Pressable,
 } from "react-native";
+import { MS_PER_SIMULATED_DAY } from "@/constants/reductionConstants";
+// import { supabase } from './supabaseClient';
 import { getRandomQuote } from "@/constants/reductionConstants";
 import { Picker } from "@react-native-picker/picker";
 import { useAtom } from "jotai";
@@ -15,6 +17,9 @@ import {
   selectedReductionDurationAtom,
   reductionOptionsAtom,
   reductionTargetAtom,
+  activeReductionAtom,
+  completedReductionAtom,
+  allCheckInsAtom,
 } from "@/atoms/reductionAtoms";
 import Button from "@/components/Button";
 import { useState } from "react";
@@ -33,17 +38,19 @@ export default function Reduction() {
   const [reductionOptions] = useAtom(reductionOptionsAtom);
   const [reductionTarget, setReductionTarget] = useAtom(reductionTargetAtom);
 
-  const availableOptions = selectedDurationId
-    ? reductionOptions[selectedDurationId] || []
-    : [];
-
-  // we need checkin and pledge logic
-
   const onCurrentModal = () => {
     router.navigate("/(tabs)/current");
     setConfirmModal(false);
   };
 
+  const availableOptions = selectedDurationId
+    ? reductionOptions[selectedDurationId] || []
+    : [];
+
+  // we need checkin and start redcution logic
+  const onStartReductionPeriod = () => {};
+
+  // not pure funcs below as they change state
   const onConfirmModal = () => {
     if (selectedDurationId && reductionTarget) {
       setModalQuote(getRandomQuote()); // generate quote only on confirm
@@ -111,7 +118,6 @@ export default function Reduction() {
           })}
         </View>
 
-        {/* Picker container preserved */}
         <View style={styles.pickerContainer}>
           <Text style={[styles.text, { marginTop: 30 }]}>
             Choose Amount of Alcohol Free Days:
@@ -143,8 +149,6 @@ export default function Reduction() {
           <Modal
             visible={confirmModal}
             transparent
-            // animationType="fade"
-            // onRequestClose={() => setConfirmModal(false)}
             onRequestClose={onCloseConfirmModal}
           >
             <Pressable
@@ -165,7 +169,6 @@ export default function Reduction() {
                   {"\n"}
                   {modalQuote}
                 </Text>
-
                 <Button label="Commit" onPress={onCurrentModal} />
               </Pressable>
             </Pressable>
