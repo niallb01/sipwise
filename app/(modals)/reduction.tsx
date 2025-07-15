@@ -18,9 +18,14 @@ import {
 } from "@/atoms/reductionAtoms";
 import Button from "@/components/Button";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 export default function Reduction() {
+  const router = useRouter();
+
   const [confirmModal, setConfirmModal] = useState(false);
+  const [modalQuote, setModalQuote] = useState(""); // NEW state to hold quote
+
   const [durations] = useAtom(reductionDurationsAtom);
   const [selectedDurationId, setSelectedDurationId] = useAtom(
     selectedReductionDurationAtom
@@ -32,10 +37,22 @@ export default function Reduction() {
     ? reductionOptions[selectedDurationId] || []
     : [];
 
+  // we need checkin and pledge logic
+
+  const onCurrentModal = () => {
+    router.navigate("/(tabs)/current");
+    setConfirmModal(false);
+  };
+
   const onConfirmModal = () => {
     if (selectedDurationId && reductionTarget) {
+      setModalQuote(getRandomQuote()); // generate quote only on confirm
       setConfirmModal(true);
     }
+  };
+
+  const onCloseConfirmModal = () => {
+    setConfirmModal(false); // Start the modal's fade-out animation
   };
 
   return (
@@ -64,7 +81,6 @@ export default function Reduction() {
                     width: "100%",
                   },
                 ]}
-                // onPress={() => setSelectedDurationId(duration)}
                 onPress={() => {
                   setSelectedDurationId(duration);
                   setReductionTarget(null); // 👈 reset picker value
@@ -100,22 +116,6 @@ export default function Reduction() {
           <Text style={[styles.text, { marginTop: 30 }]}>
             Choose Amount of Alcohol Free Days:
           </Text>
-          {/* <Picker
-            style={styles.picker}
-            itemStyle={styles.pickerItem}
-            mode="dropdown"
-            selectedValue={reductionTarget}
-            onValueChange={(value) => setReductionTarget(value)}
-          >
-            <Picker.Item label="Select..." value={null} />
-            {availableOptions.map((option) => (
-              <Picker.Item
-                key={option}
-                label={`${option} Day${option === 1 ? "" : "s"}`}
-                value={option}
-              />
-            ))}
-          </Picker> */}
           <Picker
             key={selectedDurationId} // 👈 Forces re-mount on duration change
             selectedValue={reductionTarget}
@@ -139,35 +139,38 @@ export default function Reduction() {
           <Button label={"Confirm"} onPress={onConfirmModal} />
         </View>
 
-        <Modal
-          visible={confirmModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmModal(false)}
-        >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setConfirmModal(false)} // closes on outside press
+        {confirmModal && (
+          <Modal
+            visible={confirmModal}
+            transparent
+            // animationType="fade"
+            // onRequestClose={() => setConfirmModal(false)}
+            onRequestClose={onCloseConfirmModal}
           >
             <Pressable
-              style={styles.modalContent}
-              onPress={(e) => e.stopPropagation()} // prevents close on content tap
+              style={styles.modalOverlay}
+              onPress={onCloseConfirmModal}
             >
-              <Text style={styles.text}>
-                You are committing to {reductionTarget} alcohol-free{" "}
-                {Number(reductionTarget) === 1 ? "day" : "days"} out of the next{" "}
-                {selectedDurationId} days.
-                {"\n"}
-              </Text>
-              <Text style={styles.text}>
-                {"\n"}
-                {getRandomQuote()}
-              </Text>
+              <Pressable
+                style={styles.modalContent}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <Text style={styles.text}>
+                  You are committing to {reductionTarget} alcohol-free{" "}
+                  {Number(reductionTarget) === 1 ? "day" : "days"} out of the
+                  next {selectedDurationId} days.
+                  {"\n"}
+                </Text>
+                <Text style={styles.text}>
+                  {"\n"}
+                  {modalQuote}
+                </Text>
 
-              <Button label="Commit" onPress={() => setConfirmModal(false)} />
+                <Button label="Commit" onPress={onCurrentModal} />
+              </Pressable>
             </Pressable>
-          </Pressable>
-        </Modal>
+          </Modal>
+        )}
       </View>
     </ScrollView>
   );
