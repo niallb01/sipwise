@@ -50,40 +50,114 @@ export default function Reduction() {
     ? reductionOptions[selectedDurationId] || []
     : [];
 
-  const onStartReductionPeriod = async () => {
-    const user = await supabase.auth.getUser();
+  // with Supabase anonymous users are actually "signed in"—just without an email/password or phone.
 
-    if (!user.data?.user) {
-      console.error("No user signed in.");
-      return;
+  console.log("Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL);
+  console.log("Supabase Key:", process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+
+  const ensureUser = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      const { data, error: anonError } =
+        await supabase.auth.signInAnonymously();
+      if (anonError) throw anonError;
+      return data.user!;
     }
 
-    const { id: user_id } = user.data.user;
+    return user;
+  };
 
-    const startDate = new Date();
-    const durationDays = selectedDurationId ?? 0; // make sure this is a number
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + durationDays);
+  // const onStartReductionPeriod = async () => {
+  //   try {
+  //     const user = await ensureUser();
 
-    const { data, error } = await supabase.from("reductions").insert([
-      {
-        user_id,
-        target: reductionTarget, // your target value here
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
-        duration: durationDays,
-        days_dry: 0,
-        days_wet: 0,
-        missed_days: 0,
-      },
-    ]);
+  //     const startDate = new Date();
+  //     const durationDays = selectedDurationId ?? 0;
+  //     const endDate = new Date();
+  //     endDate.setDate(startDate.getDate() + durationDays);
 
-    if (error) {
-      console.error("Failed to start reduction:", error);
-    } else {
-      console.log("Reduction started:", data);
+  //     const { data, error } = await supabase.from("reductions").insert([
+  //       {
+  //         user_id: user.id,
+  //         target: reductionTarget,
+  //         start_date: startDate.toISOString(),
+  //         end_date: endDate.toISOString(),
+  //         duration: durationDays,
+  //         days_dry: 0,
+  //         days_wet: 0,
+  //         missed_days: 0,
+  //       },
+  //     ]);
+
+  //     if (error) {
+  //       console.error("Failed to start reduction:", error);
+  //     } else {
+  //       console.log("Reduction started:", data);
+  //     }
+  //   } catch (error) {
+  //     console.error("User sign-in error:", error);
+  //   }
+  // };
+
+  const onStartReductionPeriod = async () => {
+    try {
+      const user = await ensureUser();
+
+      const startDate = new Date();
+      const durationDays = selectedDurationId ?? 0;
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + durationDays);
+
+      const { data, error } = await supabase
+        .from("reductions")
+        .insert([
+          {
+            user_id: user.id,
+            target: reductionTarget,
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            duration: durationDays,
+            days_dry: 0,
+            days_wet: 0,
+            missed_days: 0,
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error("Failed to start reduction:", error);
+        return null;
+      } else {
+        console.log("Reduction started:", data);
+        return data;
+      }
+    } catch (error) {
+      console.error("User sign-in error:", error);
+      return null;
     }
   };
+
+  const apiKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing Supabase anon key");
+  }
+
+  fetch("https://lujjlncslvvgyxryyfsv.supabase.co/rest/v1/your-table", {
+    method: "GET",
+    headers: {
+      apikey: apiKey,
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => res.json())
+    .then(console.log)
+    .catch(console.error);
 
   //////////////////////////
 
