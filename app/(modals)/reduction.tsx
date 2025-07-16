@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { MS_PER_SIMULATED_DAY } from "@/constants/reductionConstants";
-// import { supabase } from './supabaseClient';
+import { supabase } from "@/lib/supabaseClient";
 import { getRandomQuote } from "@/constants/reductionConstants";
 import { Picker } from "@react-native-picker/picker";
 import { useAtom } from "jotai";
@@ -22,8 +22,9 @@ import {
   allCheckInsAtom,
 } from "@/atoms/reductionAtoms";
 import Button from "@/components/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store"; // for React Native or Expo
 
 export default function Reduction() {
   const router = useRouter();
@@ -32,11 +33,13 @@ export default function Reduction() {
   const [modalQuote, setModalQuote] = useState(""); // NEW state to hold quote
 
   const [durations] = useAtom(reductionDurationsAtom);
+  // user selected pledge period
   const [selectedDurationId, setSelectedDurationId] = useAtom(
     selectedReductionDurationAtom
   );
-  const [reductionOptions] = useAtom(reductionOptionsAtom);
+  // target days
   const [reductionTarget, setReductionTarget] = useAtom(reductionTargetAtom);
+  const [reductionOptions] = useAtom(reductionOptionsAtom);
 
   const onCurrentModal = () => {
     router.navigate("/(tabs)/current");
@@ -47,8 +50,42 @@ export default function Reduction() {
     ? reductionOptions[selectedDurationId] || []
     : [];
 
-  // we need checkin and start redcution logic
-  const onStartReductionPeriod = () => {};
+  const onStartReductionPeriod = async () => {
+    const user = await supabase.auth.getUser();
+
+    if (!user.data?.user) {
+      console.error("No user signed in.");
+      return;
+    }
+
+    const { id: user_id } = user.data.user;
+
+    const startDate = new Date();
+    const durationDays = selectedDurationId ?? 0; // make sure this is a number
+    const endDate = new Date();
+    endDate.setDate(startDate.getDate() + durationDays);
+
+    const { data, error } = await supabase.from("reductions").insert([
+      {
+        user_id,
+        target: reductionTarget, // your target value here
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        duration: durationDays,
+        days_dry: 0,
+        days_wet: 0,
+        missed_days: 0,
+      },
+    ]);
+
+    if (error) {
+      console.error("Failed to start reduction:", error);
+    } else {
+      console.log("Reduction started:", data);
+    }
+  };
+
+  //////////////////////////
 
   // not pure funcs below as they change state
   const onConfirmModal = () => {
@@ -169,7 +206,15 @@ export default function Reduction() {
                   {"\n"}
                   {modalQuote}
                 </Text>
-                <Button label="Commit" onPress={onCurrentModal} />
+                <Button
+                  label="Commit"
+                  onPress={() => {
+                    // setSelectedDurationId(duration);
+                    // setReductionTarget(null); // 👈 reset picker value
+                    onStartReductionPeriod();
+                    onCurrentModal;
+                  }}
+                ></Button>
               </Pressable>
             </Pressable>
           </Modal>
