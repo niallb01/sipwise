@@ -147,7 +147,7 @@ export default function Reduction() {
     throw new Error("Missing Supabase anon key");
   }
 
-  fetch("https://lujjlncslvvgyxryyfsv.supabase.co/rest/v1/your-table", {
+  fetch("https://lujjlncslvvgyxryyfsv.supabase.co/rest/v1/reductions", {
     method: "GET",
     headers: {
       apikey: apiKey,
