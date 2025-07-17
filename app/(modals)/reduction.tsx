@@ -24,6 +24,11 @@ import { useReduction } from "@/hooks/useReduction";
 export default function Reduction() {
   const { onStartReductionPeriod } = useReduction();
 
+  console.log(new Date("2025-07-17T21:01:38.714175").toLocaleString("en-GB"));
+  console.log(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  // Should print 17/07/2025, 22:01:38 BST (or local time equivalent)
+
   const router = useRouter();
 
   const [confirmModal, setConfirmModal] = useState(false);
@@ -169,10 +174,8 @@ export default function Reduction() {
                 <Button
                   label="Commit"
                   onPress={() => {
-                    // setSelectedDurationId(duration);
-                    // setReductionTarget(null); // 👈 reset picker value
                     onStartReductionPeriod();
-                    onCurrentModal;
+                    onCurrentModal();
                   }}
                 ></Button>
               </Pressable>

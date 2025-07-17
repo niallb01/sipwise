@@ -27,14 +27,57 @@ export function useReduction() {
     return user;
   };
 
+  // const onStartReductionPeriod = async () => {
+  //   try {
+  //     const user = await ensureUser();
+
+  //     const startDate = new Date();
+
+  //     const durationDays = (selectedDurationId ?? 0) * MS_PER_SIMULATED_DAY; // pledge duration multiplied
+
+  //     const endDate = new Date(startDate.getTime() + durationDays);
+
+  //     endDate.setDate(startDate.getDate() + durationDays);
+
+  //     const { data, error } = await supabase
+  //       .from("reductions")
+  //       .insert([
+  //         {
+  //           user_id: user.id,
+  //           target: reductionTarget,
+  //           start_date: startDate.toISOString(),
+  //           end_date: endDate.toISOString(),
+  //           duration: durationDays,
+  //           days_dry: 0,
+  //           days_wet: 0,
+  //           missed_days: 0,
+  //         },
+  //       ])
+  //       .select();
+
+  //     if (error) {
+  //       console.error("Failed to start reduction:", error);
+  //       return null;
+  //     } else {
+  //       console.log("Reduction started:", data);
+  //       return data;
+  //     }
+  //   } catch (error) {
+  //     console.error("User sign-in error:", error);
+  //     return null;
+  //   }
+  // };
+
   const onStartReductionPeriod = async () => {
     try {
       const user = await ensureUser();
 
       const startDate = new Date();
-      const durationDays = selectedDurationId ?? 0;
-      const endDate = new Date();
-      endDate.setDate(startDate.getDate() + durationDays);
+
+      const durationDays = selectedDurationId ?? 0; // days
+      const durationMs = durationDays * MS_PER_SIMULATED_DAY; // milliseconds
+
+      const endDate = new Date(startDate.getTime() + durationMs); // correct endDate
 
       const { data, error } = await supabase
         .from("reductions")
@@ -44,7 +87,7 @@ export function useReduction() {
             target: reductionTarget,
             start_date: startDate.toISOString(),
             end_date: endDate.toISOString(),
-            duration: durationDays,
+            duration: durationDays, // store days, not milliseconds
             days_dry: 0,
             days_wet: 0,
             missed_days: 0,
