@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js"; // file because that file’s only job is to create and export the Supabase client instance.
 import { storage } from "@/lib/storage"; // your platform-safe storage adapter
-//
 import { AppState } from "react-native";
 
 // Use environment variables for safety (Expo uses EXPO_PUBLIC_ for client-side)

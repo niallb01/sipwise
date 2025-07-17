@@ -7,8 +7,6 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { MS_PER_SIMULATED_DAY } from "@/constants/reductionConstants";
-import { supabase } from "@/lib/supabaseClient";
 import { getRandomQuote } from "@/constants/reductionConstants";
 import { Picker } from "@react-native-picker/picker";
 import { useAtom } from "jotai";
@@ -17,16 +15,15 @@ import {
   selectedReductionDurationAtom,
   reductionOptionsAtom,
   reductionTargetAtom,
-  activeReductionAtom,
-  completedReductionAtom,
-  allCheckInsAtom,
 } from "@/atoms/reductionAtoms";
 import Button from "@/components/Button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store"; // for React Native or Expo
+import { useReduction } from "@/hooks/useReduction";
 
 export default function Reduction() {
+  const { onStartReductionPeriod } = useReduction();
+
   const router = useRouter();
 
   const [confirmModal, setConfirmModal] = useState(false);
@@ -49,117 +46,6 @@ export default function Reduction() {
   const availableOptions = selectedDurationId
     ? reductionOptions[selectedDurationId] || []
     : [];
-
-  // with Supabase anonymous users are actually "signed in"—just without an email/password or phone.
-
-  console.log("Supabase URL:", process.env.EXPO_PUBLIC_SUPABASE_URL);
-  console.log("Supabase Key:", process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
-
-  const ensureUser = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      const { data, error: anonError } =
-        await supabase.auth.signInAnonymously();
-      if (anonError) throw anonError;
-      return data.user!;
-    }
-
-    return user;
-  };
-
-  // const onStartReductionPeriod = async () => {
-  //   try {
-  //     const user = await ensureUser();
-
-  //     const startDate = new Date();
-  //     const durationDays = selectedDurationId ?? 0;
-  //     const endDate = new Date();
-  //     endDate.setDate(startDate.getDate() + durationDays);
-
-  //     const { data, error } = await supabase.from("reductions").insert([
-  //       {
-  //         user_id: user.id,
-  //         target: reductionTarget,
-  //         start_date: startDate.toISOString(),
-  //         end_date: endDate.toISOString(),
-  //         duration: durationDays,
-  //         days_dry: 0,
-  //         days_wet: 0,
-  //         missed_days: 0,
-  //       },
-  //     ]);
-
-  //     if (error) {
-  //       console.error("Failed to start reduction:", error);
-  //     } else {
-  //       console.log("Reduction started:", data);
-  //     }
-  //   } catch (error) {
-  //     console.error("User sign-in error:", error);
-  //   }
-  // };
-
-  const onStartReductionPeriod = async () => {
-    try {
-      const user = await ensureUser();
-
-      const startDate = new Date();
-      const durationDays = selectedDurationId ?? 0;
-      const endDate = new Date();
-      endDate.setDate(startDate.getDate() + durationDays);
-
-      const { data, error } = await supabase
-        .from("reductions")
-        .insert([
-          {
-            user_id: user.id,
-            target: reductionTarget,
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString(),
-            duration: durationDays,
-            days_dry: 0,
-            days_wet: 0,
-            missed_days: 0,
-          },
-        ])
-        .select();
-
-      if (error) {
-        console.error("Failed to start reduction:", error);
-        return null;
-      } else {
-        console.log("Reduction started:", data);
-        return data;
-      }
-    } catch (error) {
-      console.error("User sign-in error:", error);
-      return null;
-    }
-  };
-
-  const apiKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!apiKey) {
-    throw new Error("Missing Supabase anon key");
-  }
-
-  fetch("https://lujjlncslvvgyxryyfsv.supabase.co/rest/v1/reductions", {
-    method: "GET",
-    headers: {
-      apikey: apiKey,
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-  })
-    .then((res) => res.json())
-    .then(console.log)
-    .catch(console.error);
-
-  //////////////////////////
 
   // not pure funcs below as they change state
   const onConfirmModal = () => {
