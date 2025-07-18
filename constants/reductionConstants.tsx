@@ -4,6 +4,9 @@ export const GRACE_PERIOD_MS = 10000;
 
 export const EDGE_CASE_GRACE_MS = 10000; // edge case grace only
 
+// export const MS_PER_SIMULATED_DAY = 10000; // 10 seconds for testing
+// export const MS_GRACE_PERIOD = MS_PER_SIMULATED_DAY; // 1 simulated day grace, adjust as needed
+
 export const quotes = [
   "Look at you, being all responsible! 💪",
   "Crushing it harder than your hangovers. 💥",

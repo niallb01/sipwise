@@ -1,15 +1,3 @@
-// import { Text, View, StyleSheet } from "react-native";
-
-// export default function Stats() {
-//   return (
-//     <>
-//       <View style={styles.container}>
-//         <Text style={styles.text}>Stats</Text>
-//       </View>
-//     </>
-//   );
-// }
-
 import { Text, View, StyleSheet, FlatList } from "react-native";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -90,20 +78,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    marginTop: 20,
-    fontSize: 16,
+    marginTop: 5,
+    fontSize: 14,
     textAlign: "center",
     fontWeight: 300,
     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
     letterSpacing: 0.7,
   },
   header: {
-    fontSize: 22,
-    fontWeight: "500",
+    fontSize: 18,
+    fontWeight: "400",
     marginBottom: 20,
   },
   card: {
-    padding: 12,
+    padding: 5,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 12,
