@@ -51,7 +51,7 @@ export default function Stats() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Completed Pledges</Text>
+      <Text style={styles.header}>Completed Alcohol Reduction Periods</Text>
       <FlatList
         data={completedReductions}
         keyExtractor={(item) => item.id}

@@ -1,3 +1,8 @@
+// ⚠️ Must come before other imports that might use structuredClone
+if (typeof globalThis.structuredClone !== "function") {
+  globalThis.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
+}
+
 import { Stack } from "expo-router";
 import { Provider } from "jotai";
 import "react-native-url-polyfill/auto";
