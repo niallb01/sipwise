@@ -1,0 +1,19 @@
+# Ignore Deno cache (optional, if you keep it in the project)
+.deno/
+
+# Ignore environment files with secrets
+.env
+.env.*
+
+# Ignore build outputs (if you have any build step)
+dist/
+build/
+
+# Ignore logs
+*.log
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+
