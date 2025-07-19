@@ -1,11 +1,15 @@
 import { Text, View, StyleSheet, FlatList } from "react-native";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { ReductionPeriod } from "@/types/reductionTypes";
 
 export default function Stats() {
-  const [completedReductions, setCompletedReductions] = useState([]);
+  const [completedReductions, setCompletedReductions] = useState<
+    ReductionPeriod[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
+  // side effect async data fetch
   useEffect(() => {
     async function fetchCompletedReductions() {
       setLoading(true);
@@ -17,7 +21,7 @@ export default function Stats() {
           .order("end_date", { ascending: false });
 
         if (error) throw error;
-        setCompletedReductions(data || []);
+        setCompletedReductions((data || []) as ReductionPeriod[]);
       } catch (error) {
         console.error("Failed to fetch stats:", error);
         setCompletedReductions([]);

@@ -1,9 +1,12 @@
 import { View, Text, StyleSheet } from "react-native";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { ReductionPeriod } from "@/types/reductionTypes";
 
 export default function Current() {
-  const [activeReduction, setActiveReduction] = useState(null);
+  const [activeReduction, setActiveReduction] =
+    useState<ReductionPeriod | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
