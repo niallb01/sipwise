@@ -2,9 +2,9 @@ import { atom } from "jotai";
 
 export const activeReductionAtom = atom(null);
 
-export const completedReductionAtom = atom(null);
-
 export const allCheckInsAtom = atom([]);
+
+export const completedReductionAtom = atom(null);
 
 export const reductionDurationsAtom = atom<number[]>([3, 7, 10, 14, 30, 60]);
 

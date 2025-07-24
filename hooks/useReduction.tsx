@@ -38,6 +38,7 @@ export function useReduction() {
 
       const endDate = new Date(startDate.getTime() + durationMs); // correct endDate
 
+      // CRUD - When a user starts a new pledge, you create a new record in the reductions table
       const { data, error } = await supabase
         .from("reductions")
         .insert([
@@ -50,6 +51,8 @@ export function useReduction() {
             days_dry: 0,
             days_wet: 0,
             missed_days: 0,
+            ////////////////////// new
+            status: "active", // explicitly set active
           },
         ])
         .select();

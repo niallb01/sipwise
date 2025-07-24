@@ -17,7 +17,8 @@ export default function Stats() {
         const { data, error } = await supabase
           .from("reductions")
           .select("*")
-          .lt("end_date", new Date().toISOString()) // ended in the past
+          // .lt("end_date", new Date().toISOString()) // ended in the past
+          .eq("status", "completed")
           .order("end_date", { ascending: false });
 
         if (error) throw error;
