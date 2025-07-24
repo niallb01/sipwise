@@ -297,13 +297,13 @@ export default function Current() {
           <Button
             label={checkInLoading ? "Checking In..." : "No Alcohol (Dry)"}
             onPress={() => onCheckIn("dry")}
-            disabled={checkInLoading}
+            // disabled={checkInLoading}
             style={styles.dryButton}
           />
           <Button
             label={checkInLoading ? "Checking In..." : "Alcohol Consumed (Wet)"}
             onPress={() => onCheckIn("wet")}
-            disabled={checkInLoading}
+            // disabled={checkInLoading}
             style={styles.wetButton}
           />
         </View>
