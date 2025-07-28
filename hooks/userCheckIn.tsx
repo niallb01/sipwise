@@ -336,12 +336,446 @@
 ///////////////////////////
 
 // hooks/userCheckIn.ts
+// import { useState, useEffect, useCallback, useMemo } from "react";
+// import { supabase } from "@/lib/supabaseClient";
+// import { ReductionPeriod } from "@/types/reductionTypes";
+// import {
+//   getVirtualDayInfo,
+//   getVirtualDateFromDayNumber, // Now takes a second argument
+// } from "@/utils/dateHelpers";
+
+// interface CheckInStatus {
+//   canCheckInToday: boolean;
+//   canCheckInYesterday: boolean;
+//   todayCheckedIn: boolean;
+//   yesterdayCheckedIn: boolean;
+//   currentVirtualDay: number;
+//   yesterdayVirtualDay: number;
+//   pledgeActive: boolean;
+// }
+
+// export function userCheckIn(activeReduction: ReductionPeriod | null) {
+//   const [status, setStatus] = useState<CheckInStatus>({
+//     canCheckInToday: false,
+//     canCheckInYesterday: false,
+//     todayCheckedIn: false,
+//     yesterdayCheckedIn: false,
+//     currentVirtualDay: -1,
+//     yesterdayVirtualDay: -1,
+//     pledgeActive: false,
+//   });
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const checkVirtualDayStatus = useCallback(async () => {
+//     if (!activeReduction || !activeReduction.start_date) {
+//       setStatus((prev) => ({ ...prev, pledgeActive: false }));
+//       return;
+//     }
+
+//     setError(null);
+
+//     try {
+//       const startDate = new Date(activeReduction.start_date);
+//       const { currentVirtualDay } = getVirtualDayInfo(startDate);
+//       const yesterdayVirtualDay =
+//         currentVirtualDay > 0 ? currentVirtualDay - 1 : -1;
+
+//       // --- MODIFIED: Pass startDate to getVirtualDateFromDayNumber ---
+//       const todayVirtualDateString = getVirtualDateFromDayNumber(
+//         currentVirtualDay,
+//         startDate
+//       );
+//       const yesterdayVirtualDateString =
+//         yesterdayVirtualDay >= 0
+//           ? getVirtualDateFromDayNumber(yesterdayVirtualDay, startDate)
+//           : null;
+//       // --- END MODIFIED ---
+
+//       const { data: checkIns, error: fetchError } = await supabase
+//         .from("check_ins")
+//         .select("check_in_date")
+//         .eq("reduction_id", activeReduction.id)
+//         .in(
+//           "check_in_date",
+//           [todayVirtualDateString, yesterdayVirtualDateString].filter(Boolean)
+//         );
+
+//       if (fetchError) {
+//         throw fetchError;
+//       }
+
+//       const todayCheckedIn = checkIns.some(
+//         (ci) =>
+//           getVirtualDateFromDayNumber(currentVirtualDay, startDate) ===
+//           ci.check_in_date
+//       );
+//       const yesterdayCheckedIn =
+//         yesterdayVirtualDay >= 0 &&
+//         checkIns.some(
+//           (ci) =>
+//             getVirtualDateFromDayNumber(yesterdayVirtualDay, startDate) ===
+//             ci.check_in_date
+//         );
+
+//       setStatus({
+//         canCheckInToday: !todayCheckedIn,
+//         canCheckInYesterday: yesterdayVirtualDay >= 0 && !yesterdayCheckedIn,
+//         todayCheckedIn,
+//         yesterdayCheckedIn,
+//         currentVirtualDay,
+//         yesterdayVirtualDay,
+//         pledgeActive: true,
+//       });
+//     } catch (err: any) {
+//       console.error("Error checking check-in status (virtual):", err.message);
+//       setError("Failed to check daily status.");
+//       setStatus((prev) => ({
+//         ...prev,
+//         pledgeActive: true,
+//         canCheckInToday: false,
+//         canCheckInYesterday: false,
+//       }));
+//     }
+//   }, [activeReduction]);
+
+//   useEffect(() => {
+//     checkVirtualDayStatus();
+
+//     const interval = setInterval(() => {
+//       checkVirtualDayStatus();
+//     }, 1000);
+
+//     return () => clearInterval(interval);
+//   }, [checkVirtualDayStatus]);
+
+//   const onCheckIn = useCallback(
+//     async (statusType: "dry" | "wet", targetVirtualDay: number) => {
+//       if (!activeReduction || !activeReduction.start_date) {
+//         setError("No active reduction period to check into.");
+//         return;
+//       }
+
+//       setLoading(true);
+//       setError(null);
+
+//       try {
+//         const { data: userData } = await supabase.auth.getUser();
+//         const user = userData?.user;
+//         if (!user) {
+//           throw new Error("No user logged in. Please log in to check in.");
+//         }
+
+//         const startDate = new Date(activeReduction.start_date);
+//         const { currentVirtualDay } = getVirtualDayInfo(startDate);
+
+//         // Call the Supabase RPC function, passing the target and current virtual day numbers
+//         const { data: rpcResponse, error: rpcError } = await supabase.rpc(
+//           "handle_user_check_in",
+//           {
+//             p_user_id: user.id,
+//             p_reduction_id: activeReduction.id,
+//             p_status: statusType,
+//             p_target_virtual_day_number: targetVirtualDay,
+//             p_current_virtual_day_number: currentVirtualDay,
+//           }
+//         );
+
+//         if (rpcError) {
+//           console.error("RPC Error:", rpcError.message);
+//           if (
+//             rpcError.code === "23505" ||
+//             rpcError.message.includes("already checked in")
+//           ) {
+//             setError(
+//               `You've already checked in for virtual day ${targetVirtualDay}.`
+//             );
+//           } else if (rpcError.message.includes("Grace period expired")) {
+//             setError(rpcError.message);
+//           } else {
+//             setError(rpcError.message);
+//           }
+//           throw rpcError;
+//         }
+
+//         setError(null);
+//         await checkVirtualDayStatus();
+//       } catch (err: any) {
+//         console.error("Check-in error (virtual):", err.message);
+//         if (!error) {
+//           setError(err.message);
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     },
+//     [activeReduction, checkVirtualDayStatus]
+//   );
+
+//   return { status, onCheckIn, loading, error };
+// }
+/////////////////////////////////////
+
+// hooks/userCheckIn.ts
+// import { useState, useEffect, useCallback, useMemo } from "react";
+// import { supabase } from "@/lib/supabaseClient";
+// import { ReductionPeriod } from "@/types/reductionTypes";
+// import {
+//   getVirtualDayInfo,
+//   getVirtualDayStartTimestamp, // NEW: Import the new function
+//   getVirtualDayEndTimestamp, // NEW: Import the new function
+//   MS_PER_SIMULATED_DAY, // NEW: Import the constant
+// } from "@/utils/dateHelpers"; // Make sure this path is correct
+
+// interface CheckInStatus {
+//   canCheckInToday: boolean;
+//   canCheckInYesterday: boolean;
+//   todayCheckedIn: boolean;
+//   yesterdayCheckedIn: boolean;
+//   currentVirtualDay: number;
+//   yesterdayVirtualDay: number;
+//   pledgeActive: boolean;
+// }
+
+// export function userCheckIn(activeReduction: ReductionPeriod | null) {
+//   const [status, setStatus] = useState<CheckInStatus>({
+//     canCheckInToday: false,
+//     canCheckInYesterday: false,
+//     todayCheckedIn: false,
+//     yesterdayCheckedIn: false,
+//     currentVirtualDay: -1,
+//     yesterdayVirtualDay: -1,
+//     pledgeActive: false,
+//   });
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const checkVirtualDayStatus = useCallback(async () => {
+//     console.log("checkVirtualDayStatus: Running...");
+//     if (!activeReduction || !activeReduction.start_date) {
+//       console.log(
+//         "checkVirtualDayStatus: No active reduction or start_date, setting pledgeActive to false."
+//       );
+//       setStatus((prev) => ({ ...prev, pledgeActive: false }));
+//       return;
+//     }
+
+//     setError(null);
+
+//     try {
+//       const startDate = new Date(activeReduction.start_date);
+//       const { currentVirtualDay } = getVirtualDayInfo(startDate);
+//       const yesterdayVirtualDay =
+//         currentVirtualDay > 0 ? currentVirtualDay - 1 : -1;
+
+//       // Calculate the precise timestamp ranges for today and yesterday's virtual days
+//       const todayVirtualDayStart = getVirtualDayStartTimestamp(
+//         currentVirtualDay,
+//         startDate
+//       );
+//       const todayVirtualDayEnd = getVirtualDayEndTimestamp(
+//         currentVirtualDay,
+//         startDate
+//       );
+
+//       let yesterdayVirtualDayStart: string | null = null;
+//       let yesterdayVirtualDayEnd: string | null = null;
+
+//       if (yesterdayVirtualDay >= 0) {
+//         yesterdayVirtualDayStart = getVirtualDayStartTimestamp(
+//           yesterdayVirtualDay,
+//           startDate
+//         );
+//         yesterdayVirtualDayEnd = getVirtualDayEndTimestamp(
+//           yesterdayVirtualDay,
+//           startDate
+//         );
+//       }
+
+//       console.log(
+//         `checkVirtualDayStatus: Current Virtual Day: ${currentVirtualDay}, Yesterday: ${yesterdayVirtualDay}`
+//       );
+//       console.log(
+//         `checkVirtualDayStatus: Today Virtual Range: ${todayVirtualDayStart} to ${todayVirtualDayEnd}`
+//       );
+//       if (yesterdayVirtualDayStart) {
+//         console.log(
+//           `checkVirtualDayStatus: Yesterday Virtual Range: ${yesterdayVirtualDayStart} to ${yesterdayVirtualDayEnd}`
+//         );
+//       }
+
+//       // Query for check-ins within the precise timestamp ranges
+//       // We need to check for check-ins within the *exact* virtual day intervals
+//       // using the 'date_and_time' column, as the backend function does.
+//       const { data: checkIns, error: fetchError } = await supabase
+//         .from("check_ins")
+//         .select("date_and_time, status") // Select date_and_time for comparison
+//         .eq("reduction_id", activeReduction.id)
+//         .or(
+//           `and(date_and_time.gte.${todayVirtualDayStart},date_and_time.lt.${todayVirtualDayEnd}),` +
+//             (yesterdayVirtualDayStart
+//               ? `and(date_and_time.gte.${yesterdayVirtualDayStart},date_and_time.lt.${yesterdayVirtualDayEnd})`
+//               : "")
+//         );
+
+//       if (fetchError) {
+//         throw fetchError;
+//       }
+
+//       console.log("checkVirtualDayStatus: Fetched check-ins:", checkIns);
+
+//       // Check if a check-in exists for today's virtual day
+//       const todayCheckedIn = checkIns.some((ci) => {
+//         const ciTime = new Date(ci.date_and_time).getTime();
+//         const dayStart = new Date(todayVirtualDayStart).getTime();
+//         const dayEnd = new Date(todayVirtualDayEnd).getTime();
+//         return ciTime >= dayStart && ciTime < dayEnd;
+//       });
+
+//       // Check if a check-in exists for yesterday's virtual day (if applicable)
+//       const yesterdayCheckedIn =
+//         yesterdayVirtualDay >= 0 &&
+//         checkIns.some((ci) => {
+//           if (!yesterdayVirtualDayStart || !yesterdayVirtualDayEnd)
+//             return false;
+//           const ciTime = new Date(ci.date_and_time).getTime();
+//           const dayStart = new Date(yesterdayVirtualDayStart).getTime();
+//           const dayEnd = new Date(yesterdayVirtualDayEnd).getTime();
+//           return ciTime >= dayStart && ciTime < dayEnd;
+//         });
+
+//       setStatus({
+//         canCheckInToday: !todayCheckedIn,
+//         canCheckInYesterday: yesterdayVirtualDay >= 0 && !yesterdayCheckedIn,
+//         todayCheckedIn,
+//         yesterdayCheckedIn,
+//         currentVirtualDay,
+//         yesterdayVirtualDay,
+//         pledgeActive: true,
+//       });
+//       console.log("checkVirtualDayStatus: Status updated:", {
+//         canCheckInToday: !todayCheckedIn,
+//         canCheckInYesterday: yesterdayVirtualDay >= 0 && !yesterdayCheckedIn,
+//         todayCheckedIn,
+//         yesterdayCheckedIn,
+//         currentVirtualDay,
+//         yesterdayVirtualDay,
+//         pledgeActive: true,
+//       });
+//     } catch (err: any) {
+//       console.error(
+//         "checkVirtualDayStatus: Error checking check-in status (virtual):",
+//         err.message
+//       );
+//       setError("Failed to check daily status.");
+//       setStatus((prev) => ({
+//         ...prev,
+//         pledgeActive: true,
+//         canCheckInToday: false,
+//         canCheckInYesterday: false,
+//       }));
+//     }
+//   }, [activeReduction]); // activeReduction is a dependency as we use its properties
+
+//   useEffect(() => {
+//     checkVirtualDayStatus();
+
+//     // Re-check status every MS_PER_SIMULATED_DAY for real-time updates
+//     const interval = setInterval(() => {
+//       checkVirtualDayStatus();
+//     }, MS_PER_SIMULATED_DAY); // Use the constant for interval
+
+//     return () => clearInterval(interval);
+//   }, [checkVirtualDayStatus]); // checkVirtualDayStatus is a dependency
+
+//   const onCheckIn = useCallback(
+//     async (statusType: "dry" | "wet", targetVirtualDay: number) => {
+//       if (!activeReduction || !activeReduction.start_date) {
+//         setError("No active reduction period to check into.");
+//         return;
+//       }
+
+//       setLoading(true);
+//       setError(null);
+
+//       try {
+//         const { data: userData } = await supabase.auth.getUser();
+//         const user = userData?.user;
+//         if (!user) {
+//           throw new Error("No user logged in. Please log in to check in.");
+//         }
+
+//         const startDate = new Date(activeReduction.start_date);
+//         // Calculate the precise check-in timestamp based on the target virtual day
+//         // We'll use the start of the virtual day, but any time within the day is fine.
+//         const preciseCheckInTimestamp = getVirtualDayStartTimestamp(
+//           targetVirtualDay,
+//           startDate
+//         );
+
+//         console.log(
+//           `onCheckIn: Attempting check-in for virtual day ${targetVirtualDay} at ${preciseCheckInTimestamp}`
+//         );
+
+//         // Call the Supabase RPC function, passing the precise timestamp
+//         const { data: rpcResponse, error: rpcError } = await supabase.rpc(
+//           "handle_user_check_in",
+//           {
+//             p_user_id: user.id,
+//             p_reduction_id: activeReduction.id,
+//             p_status: statusType,
+//             p_check_in_timestamp: preciseCheckInTimestamp, // NEW: Pass precise timestamp
+//             // p_target_virtual_day_number and p_current_virtual_day_number might not be needed by RPC if it uses timestamp
+//             // but keeping them for now if handle_user_check_in expects them.
+//             // You might need to adjust handle_user_check_in to accept p_check_in_timestamp
+//           }
+//         );
+
+//         if (rpcError) {
+//           console.error("onCheckIn: RPC Error:", rpcError.message);
+//           if (
+//             rpcError.code === "23505" ||
+//             rpcError.message.includes("already checked in")
+//           ) {
+//             setError(
+//               `You've already checked in for virtual day ${targetVirtualDay}.`
+//             );
+//           } else if (rpcError.message.includes("Grace period expired")) {
+//             setError(rpcError.message);
+//           } else {
+//             setError(rpcError.message);
+//           }
+//           throw rpcError;
+//         }
+
+//         console.log("onCheckIn: Check-in RPC successful.");
+//         setError(null);
+//         await checkVirtualDayStatus(); // Re-check status to update UI
+//       } catch (err: any) {
+//         console.error("onCheckIn: Check-in error (virtual):", err.message);
+//         if (!error) {
+//           setError(err.message);
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     },
+//     [activeReduction, checkVirtualDayStatus]
+//   );
+
+//   return { status, onCheckIn, loading, error };
+// }
+//////////////
+
+// hooks/userCheckIn.ts
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { ReductionPeriod } from "@/types/reductionTypes";
 import {
   getVirtualDayInfo,
-  getVirtualDateFromDayNumber, // Now takes a second argument
+  getVirtualDayStartTimestamp,
+  getVirtualDayEndTimestamp,
+  MS_PER_SIMULATED_DAY,
 } from "@/utils/dateHelpers";
 
 interface CheckInStatus {
@@ -368,7 +802,11 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
   const [error, setError] = useState<string | null>(null);
 
   const checkVirtualDayStatus = useCallback(async () => {
+    console.log("checkVirtualDayStatus: Running...");
     if (!activeReduction || !activeReduction.start_date) {
+      console.log(
+        "checkVirtualDayStatus: No active reduction or start_date, setting pledgeActive to false."
+      );
       setStatus((prev) => ({ ...prev, pledgeActive: false }));
       return;
     }
@@ -381,42 +819,77 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
       const yesterdayVirtualDay =
         currentVirtualDay > 0 ? currentVirtualDay - 1 : -1;
 
-      // --- MODIFIED: Pass startDate to getVirtualDateFromDayNumber ---
-      const todayVirtualDateString = getVirtualDateFromDayNumber(
+      const todayVirtualDayStart = getVirtualDayStartTimestamp(
         currentVirtualDay,
         startDate
       );
-      const yesterdayVirtualDateString =
-        yesterdayVirtualDay >= 0
-          ? getVirtualDateFromDayNumber(yesterdayVirtualDay, startDate)
-          : null;
+      const todayVirtualDayEnd = getVirtualDayEndTimestamp(
+        currentVirtualDay,
+        startDate
+      );
+
+      let yesterdayVirtualDayStart: string | null = null;
+      let yesterdayVirtualDayEnd: string | null = null;
+
+      if (yesterdayVirtualDay >= 0) {
+        yesterdayVirtualDayStart = getVirtualDayStartTimestamp(
+          yesterdayVirtualDay,
+          startDate
+        );
+        yesterdayVirtualDayEnd = getVirtualDayEndTimestamp(
+          yesterdayVirtualDay,
+          startDate
+        );
+      }
+
+      console.log(
+        `checkVirtualDayStatus: Current Virtual Day: ${currentVirtualDay}, Yesterday: ${yesterdayVirtualDay}`
+      );
+      console.log(
+        `checkVirtualDayStatus: Today Virtual Range: ${todayVirtualDayStart} to ${todayVirtualDayEnd}`
+      );
+      if (yesterdayVirtualDayStart) {
+        console.log(
+          `checkVirtualDayStatus: Yesterday Virtual Range: ${yesterdayVirtualDayStart} to ${yesterdayVirtualDayEnd}`
+        );
+      }
+
+      // --- MODIFIED: Construct the .or() query string more carefully ---
+      let orQueryString = `and(date_and_time.gte.${todayVirtualDayStart},date_and_time.lt.${todayVirtualDayEnd})`;
+      if (yesterdayVirtualDayStart) {
+        orQueryString += `,and(date_and_time.gte.${yesterdayVirtualDayStart},date_and_time.lt.${yesterdayVirtualDayEnd})`;
+      }
       // --- END MODIFIED ---
 
       const { data: checkIns, error: fetchError } = await supabase
         .from("check_ins")
-        .select("check_in_date")
+        .select("date_and_time, status")
         .eq("reduction_id", activeReduction.id)
-        .in(
-          "check_in_date",
-          [todayVirtualDateString, yesterdayVirtualDateString].filter(Boolean)
-        );
+        .or(orQueryString); // Use the carefully constructed string
 
       if (fetchError) {
         throw fetchError;
       }
 
-      const todayCheckedIn = checkIns.some(
-        (ci) =>
-          getVirtualDateFromDayNumber(currentVirtualDay, startDate) ===
-          ci.check_in_date
-      );
+      console.log("checkVirtualDayStatus: Fetched check-ins:", checkIns);
+
+      const todayCheckedIn = checkIns.some((ci) => {
+        const ciTime = new Date(ci.date_and_time).getTime();
+        const dayStart = new Date(todayVirtualDayStart).getTime();
+        const dayEnd = new Date(todayVirtualDayEnd).getTime();
+        return ciTime >= dayStart && ciTime < dayEnd;
+      });
+
       const yesterdayCheckedIn =
         yesterdayVirtualDay >= 0 &&
-        checkIns.some(
-          (ci) =>
-            getVirtualDateFromDayNumber(yesterdayVirtualDay, startDate) ===
-            ci.check_in_date
-        );
+        checkIns.some((ci) => {
+          if (!yesterdayVirtualDayStart || !yesterdayVirtualDayEnd)
+            return false;
+          const ciTime = new Date(ci.date_and_time).getTime();
+          const dayStart = new Date(yesterdayVirtualDayStart).getTime();
+          const dayEnd = new Date(yesterdayVirtualDayEnd).getTime();
+          return ciTime >= dayStart && ciTime < dayEnd;
+        });
 
       setStatus({
         canCheckInToday: !todayCheckedIn,
@@ -427,8 +900,20 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
         yesterdayVirtualDay,
         pledgeActive: true,
       });
+      console.log("checkVirtualDayStatus: Status updated:", {
+        canCheckInToday: !todayCheckedIn,
+        canCheckInYesterday: yesterdayVirtualDay >= 0 && !yesterdayCheckedIn,
+        todayCheckedIn,
+        yesterdayCheckedIn,
+        currentVirtualDay,
+        yesterdayVirtualDay,
+        pledgeActive: true,
+      });
     } catch (err: any) {
-      console.error("Error checking check-in status (virtual):", err.message);
+      console.error(
+        "checkVirtualDayStatus: Error checking check-in status (virtual):",
+        err.message
+      );
       setError("Failed to check daily status.");
       setStatus((prev) => ({
         ...prev,
@@ -444,7 +929,7 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
 
     const interval = setInterval(() => {
       checkVirtualDayStatus();
-    }, 1000);
+    }, MS_PER_SIMULATED_DAY);
 
     return () => clearInterval(interval);
   }, [checkVirtualDayStatus]);
@@ -467,22 +952,27 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
         }
 
         const startDate = new Date(activeReduction.start_date);
-        const { currentVirtualDay } = getVirtualDayInfo(startDate);
+        const preciseCheckInTimestamp = getVirtualDayStartTimestamp(
+          targetVirtualDay,
+          startDate
+        );
 
-        // Call the Supabase RPC function, passing the target and current virtual day numbers
+        console.log(
+          `onCheckIn: Attempting check-in for virtual day ${targetVirtualDay} at ${preciseCheckInTimestamp}`
+        );
+
         const { data: rpcResponse, error: rpcError } = await supabase.rpc(
           "handle_user_check_in",
           {
             p_user_id: user.id,
             p_reduction_id: activeReduction.id,
             p_status: statusType,
-            p_target_virtual_day_number: targetVirtualDay,
-            p_current_virtual_day_number: currentVirtualDay,
+            p_check_in_timestamp: preciseCheckInTimestamp,
           }
         );
 
         if (rpcError) {
-          console.error("RPC Error:", rpcError.message);
+          console.error("onCheckIn: RPC Error:", rpcError.message);
           if (
             rpcError.code === "23505" ||
             rpcError.message.includes("already checked in")
@@ -498,10 +988,11 @@ export function userCheckIn(activeReduction: ReductionPeriod | null) {
           throw rpcError;
         }
 
+        console.log("onCheckIn: Check-in RPC successful.");
         setError(null);
         await checkVirtualDayStatus();
       } catch (err: any) {
-        console.error("Check-in error (virtual):", err.message);
+        console.error("onCheckIn: Check-in error (virtual):", err.message);
         if (!error) {
           setError(err.message);
         }
