@@ -1,1043 +1,38 @@
-// import { View, Text, StyleSheet } from "react-native";
-// import { useState, useEffect } from "react";
-// import { supabase } from "@/lib/supabaseClient";
-// import { ReductionPeriod } from "@/types/reductionTypes";
-// import { formatDateToLocalWithTZ } from "@/utils/dateHelpers";
-// import Button from "@/components/Button";
-// import { userCheckIn } from "@/hooks/userCheckIn";
-
-// export default function Current() {
-//   const [activeReduction, setActiveReduction] =
-//     useState<ReductionPeriod | null>(null);
-//   const [loadingReduction, setLoadingReduction] = useState(true);
-//   const [reductionFetchError, setReductionFetchError] = useState<string | null>(
-//     null
-//   );
-
-//   const {
-//     hasCheckedInToday,
-//     onCheckIn,
-//     loading: checkInLoading,
-//     error: checkInError,
-//   } = userCheckIn(activeReduction);
-
-//   const fetchActiveReduction = async () => {
-//     setLoadingReduction(true);
-//     setReductionFetchError(null);
-
-//     try {
-//       const { data: userData, error: userError } =
-//         await supabase.auth.getUser();
-//       const user = userData?.user;
-
-//       if (userError || !user) {
-//         console.error(
-//           "No user logged in or error fetching user:",
-//           userError?.message || "User not found."
-//         );
-//         setReductionFetchError("Please log in to view your active pledge.");
-//         setLoadingReduction(false);
-//         return;
-//       }
-
-//       const { data, error } = await supabase
-//         .from("reductions")
-//         .select(
-//           `
-//           id,
-//           target,
-//           start_date,
-//           end_date,
-//           duration,
-//           days_dry,
-//           days_wet,
-//           missed_days
-//         `
-//         )
-//         .eq("user_id", user.id)
-//         .eq("status", "active")
-//         .order("start_date", { ascending: false })
-//         .limit(1);
-
-//       if (error) throw error;
-
-//       setActiveReduction(data?.[0] || null);
-//     } catch (error: any) {
-//       console.error("Error fetching active reduction:", error.message);
-//       setReductionFetchError(`Failed to load pledge: ${error.message}`);
-//       setActiveReduction(null);
-//     } finally {
-//       setLoadingReduction(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchActiveReduction();
-//   }, []);
-
-//   if (loadingReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>Loading your reduction period...</Text>
-//       </View>
-//     );
-//   }
-
-//   if (reductionFetchError) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={[styles.text, { color: "red" }]}>
-//           {reductionFetchError}
-//         </Text>
-//       </View>
-//     );
-//   }
-
-//   if (!activeReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>No active reduction period found.</Text>
-//       </View>
-//     );
-//   }
-
-//   const {
-//     target,
-//     start_date,
-//     end_date,
-//     duration,
-//     days_dry,
-//     days_wet,
-//     missed_days,
-//   } = activeReduction;
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.text}>
-//         Reduction Period: {duration} day{duration !== 1 ? "s" : ""}
-//       </Text>
-//       <Text style={styles.text}>Target Alcohol-Free Days: {target}</Text>
-//       <Text style={styles.text}>
-//         Start Date: {formatDateToLocalWithTZ(start_date)}
-//       </Text>
-//       <Text style={styles.text}>
-//         End Date: {formatDateToLocalWithTZ(end_date)}
-//       </Text>
-
-//       <Text style={styles.text}>Days Dry: {days_dry}</Text>
-//       <Text style={styles.text}>Days Wet: {days_wet}</Text>
-//       <Text style={styles.text}>Missed Days: {missed_days}</Text>
-
-//       {checkInError && (
-//         <Text style={[styles.text, { color: "red", marginTop: 10 }]}>
-//           Error checking in: {checkInError}
-//         </Text>
-//       )}
-
-//       {hasCheckedInToday ? (
-//         <Text style={styles.text}>✅ You’ve already checked in today!</Text>
-//       ) : (
-//         <>
-//           <Button label="No (Dry)" onPress={() => onCheckIn("dry")} />
-//           <Button label="Yes (Wet)" onPress={() => onCheckIn("wet")} />
-//         </>
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 16,
-//   },
-//   text: {
-//     fontSize: 16,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//     marginVertical: 4,
-//   },
-// });
-/////////////////////////////////////////////////////////////////////////////
-// import React, { useState, useEffect, useCallback } from "react"; // Added useMemo
-// import { View, Text, StyleSheet } from "react-native";
-// import { supabase } from "@/lib/supabaseClient";
-// import { ReductionPeriod } from "@/types/reductionTypes";
-// import {
-//   formatDateToLocalWithTZ,
-//   getVirtualDayInfo,
-// } from "@/utils/dateHelpers"; // Ensure getVirtualDayInfo is imported
-// import Button from "@/components/Button"; // Assuming this is your custom Button component
-// import { userCheckIn } from "@/hooks/userCheckIn";
-
-// export default function Current() {
-//   const [activeReduction, setActiveReduction] =
-//     useState<ReductionPeriod | null>(null);
-//   const [loadingReduction, setLoadingReduction] = useState(true);
-//   const [reductionFetchError, setReductionFetchError] = useState<string | null>(
-//     null
-//   );
-
-//   // MODIFIED: Destructure `status` from userCheckIn hook
-//   const {
-//     status, // This is the new comprehensive status object
-//     onCheckIn,
-//     loading: checkInLoading,
-//     error: checkInError,
-//   } = userCheckIn(activeReduction);
-
-//   // Memoized fetch function to use in useEffect and after check-in
-//   const fetchActiveReduction = useCallback(async () => {
-//     setLoadingReduction(true);
-//     setReductionFetchError(null);
-
-//     try {
-//       const { data: userData, error: userError } =
-//         await supabase.auth.getUser();
-//       const user = userData?.user;
-
-//       if (userError || !user) {
-//         console.error(
-//           "No user logged in or error fetching user:",
-//           userError?.message || "User not found."
-//         );
-//         setReductionFetchError("Please log in to view your active pledge.");
-//         setLoadingReduction(false);
-//         return;
-//       }
-
-//       const { data, error } = await supabase
-//         .from("reductions")
-//         .select(
-//           `
-//           id,
-//           target,
-//           start_date,
-//           end_date,
-//           duration,
-//           days_dry,
-//           days_wet,
-//           missed_days,
-//           status
-
-//         `
-//         )
-//         .eq("user_id", user.id)
-//         .eq("status", "active")
-//         .order("start_date", { ascending: false })
-//         .limit(1);
-
-//       if (error) throw error;
-
-//       setActiveReduction(data?.[0] || null);
-//     } catch (error: any) {
-//       console.error("Error fetching active reduction:", error.message);
-//       setReductionFetchError(`Failed to load pledge: ${error.message}`);
-//       setActiveReduction(null);
-//     } finally {
-//       setLoadingReduction(false);
-//     }
-//   }, []); // useCallback with empty deps means it's stable
-
-//   // Handler to call onCheckIn and then refresh the main reduction data
-//   const handleCheckInAndRefresh = async (
-//     type: "dry" | "wet",
-//     targetDay: number
-//   ) => {
-//     await onCheckIn(type, targetDay);
-//     // After the check-in attempt (success or failure), refetch to update UI counts
-//     fetchActiveReduction();
-//   };
-
-//   useEffect(() => {
-//     fetchActiveReduction();
-//   }, [fetchActiveReduction]); // Dependency on the memoized fetch function
-
-//   // --- Render Logic ---
-
-//   if (loadingReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>Loading your reduction period...</Text>
-//       </View>
-//     );
-//   }
-
-//   if (reductionFetchError) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={[styles.text, { color: "red" }]}>
-//           {reductionFetchError}
-//         </Text>
-//       </View>
-//     );
-//   }
-
-//   if (!activeReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>No active reduction period found.</Text>
-//       </View>
-//     );
-//   }
-
-//   const {
-//     target,
-//     start_date,
-//     end_date,
-//     duration,
-//     days_dry,
-//     days_wet,
-//     missed_days,
-//   } = activeReduction;
-
-//   return (
-//     <View style={styles.container}>
-//       {/* Display Current Virtual Day (for testing) */}
-//       <Text style={styles.text}>
-//         Current Virtual Day:{" "}
-//         {status.currentVirtualDay !== -1
-//           ? status.currentVirtualDay
-//           : "Loading..."}
-//       </Text>
-
-//       <Text style={styles.text}>
-//         Reduction Period: {duration} day{duration !== 1 ? "s" : ""}
-//       </Text>
-//       <Text style={styles.text}>Target Alcohol-Free Days: {target}</Text>
-//       <Text style={styles.text}>
-//         Start Date: {formatDateToLocalWithTZ(start_date)}
-//       </Text>
-//       <Text style={styles.text}>
-//         End Date: {formatDateToLocalWithTZ(end_date)}
-//       </Text>
-
-//       <Text style={styles.text}>Days Dry: {days_dry}</Text>
-//       <Text style={styles.text}>Days Wet: {days_wet}</Text>
-//       <Text style={styles.text}>Missed Days: {missed_days}</Text>
-
-//       {checkInError && (
-//         <Text style={[styles.text, { color: "red", marginTop: 10 }]}>
-//           Error checking in: {checkInError}
-//         </Text>
-//       )}
-
-//       {/* Conditional Buttons based on `status` from the hook */}
-//       {!status.pledgeActive ? (
-//         <Text style={styles.text}>Start a new pledge to check in.</Text>
-//       ) : (
-//         <>
-//           {/* Check-in for TODAY's virtual day */}
-//           {status.canCheckInToday ? (
-//             <View>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.currentVirtualDay}:
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.currentVirtualDay)
-//                 }
-//                 // disabled={checkInLoading}
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.currentVirtualDay)
-//                 }
-//                 // disabled={checkInLoading}
-//               />
-//             </View>
-//           ) : (
-//             status.currentVirtualDay !== -1 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.currentVirtualDay}
-//               </Text>
-//             )
-//           )}
-
-//           {/* Check-in for YESTERDAY's virtual day (if within grace period) */}
-//           {status.canCheckInYesterday ? (
-//             <View style={{ marginTop: 15 }}>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.yesterdayVirtualDay} (Grace
-//                 Period):
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.yesterdayVirtualDay)
-//                 }
-//                 // disabled={checkInLoading}
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.yesterdayVirtualDay)
-//                 }
-//                 // disabled={checkInLoading}
-//               />
-//             </View>
-//           ) : (
-//             // Only show this message if yesterday was a valid day AND it's already checked in
-//             status.yesterdayVirtualDay >= 0 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.yesterdayVirtualDay}
-//               </Text>
-//             )
-//           )}
-//         </>
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 16,
-//   },
-//   text: {
-//     fontSize: 16,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//     marginVertical: 4,
-//   },
-// });
-///////////////////////////////////
-
-// import React, { useState, useEffect, useCallback, useMemo } from "react"; // Added useMemo
-// import { View, Text, StyleSheet } from "react-native";
-// import { supabase } from "@/lib/supabaseClient";
-// import { ReductionPeriod } from "@/types/reductionTypes";
-// import {
-//   formatDateToLocalWithTZ,
-//   getVirtualDayInfo,
-// } from "@/utils/dateHelpers"; // Ensure getVirtualDayInfo is imported
-// import Button from "@/components/Button"; // Assuming this is your custom Button component
-// import { userCheckIn } from "@/hooks/userCheckIn";
-
-// export default function Current() {
-//   const [activeReduction, setActiveReduction] =
-//     useState<ReductionPeriod | null>(null);
-//   const [loadingReduction, setLoadingReduction] = useState(true);
-//   const [reductionFetchError, setReductionFetchError] = useState<string | null>(
-//     null
-//   );
-
-//   // MODIFIED: Destructure `status` from userCheckIn hook
-//   const {
-//     status, // This is the new comprehensive status object
-//     onCheckIn,
-//     loading: checkInLoading,
-//     error: checkInError,
-//   } = userCheckIn(activeReduction);
-
-//   // Memoized fetch function to use in useEffect and after check-in
-//   const fetchActiveReduction = useCallback(async () => {
-//     setLoadingReduction(true);
-//     setReductionFetchError(null);
-
-//     try {
-//       const { data: userData, error: userError } =
-//         await supabase.auth.getUser();
-//       const user = userData?.user;
-
-//       if (userError || !user) {
-//         console.error(
-//           "No user logged in or error fetching user:",
-//           userError?.message || "User not found."
-//         );
-//         setReductionFetchError("Please log in to view your active pledge.");
-//         setLoadingReduction(false);
-//         return;
-//       }
-
-//       const { data, error } = await supabase
-//         .from("reductions")
-//         .select(
-//           `
-//           id,
-//           target,
-//           start_date,
-//           end_date,
-//           duration,
-//           days_dry,
-//           days_wet,
-//           missed_days,
-//           status
-
-//         `
-//         )
-//         .eq("user_id", user.id)
-//         .eq("status", "active")
-//         .order("start_date", { ascending: false })
-//         .limit(1);
-
-//       if (error) throw error;
-
-//       setActiveReduction(data?.[0] || null);
-//     } catch (error: any) {
-//       console.error("Error fetching active reduction:", error.message);
-//       setReductionFetchError(`Failed to load pledge: ${error.message}`);
-//       setActiveReduction(null);
-//     } finally {
-//       setLoadingReduction(false);
-//     }
-//   }, []); // useCallback with empty deps means it's stable
-
-//   // ************ MODIFIED SECTION ************
-//   // Handler to call onCheckIn and then refresh the main reduction data
-//   const handleCheckInAndRefresh = async (
-//     type: "dry" | "wet",
-//     targetDay: number
-//   ) => {
-//     if (!activeReduction?.id) return; // Guard against no active reduction
-
-//     // 1. Perform the check-in
-//     await onCheckIn(type, targetDay);
-
-//     // 2. Call the new RPC to update missed_days in the DB
-//     const { error: missedDaysError } = await supabase.rpc(
-//       "update_missed_days_for_reduction",
-//       { p_reduction_id: activeReduction.id }
-//     );
-//     if (missedDaysError) {
-//       console.error("Error updating missed days:", missedDaysError.message);
-//       // Optionally display an error to the user if this part fails
-//     }
-
-//     // 3. Finally, refetch the active reduction data to update all local state (days_dry, days_wet, and the newly updated missed_days)
-//     await fetchActiveReduction();
-//   };
-
-//   // ************ MODIFIED SECTION ************
-//   // useEffect to call new RPC on initial load and whenever activeReduction.id changes
-//   useEffect(() => {
-//     const initializeReductionData = async () => {
-//       await fetchActiveReduction(); // First fetch to get activeReduction ID
-//       // Only proceed if an active reduction exists AND its ID is available
-//       if (activeReduction?.id) {
-//         // Call the new RPC to update missed_days
-//         const { error: missedDaysInitialError } = await supabase.rpc(
-//           "update_missed_days_for_reduction",
-//           { p_reduction_id: activeReduction.id }
-//         );
-//         if (missedDaysInitialError) {
-//           console.error(
-//             "Error on initial update of missed days:",
-//             missedDaysInitialError.message
-//           );
-//         }
-//         await fetchActiveReduction(); // Re-fetch to get the newly updated missed_days from DB
-//       }
-//     };
-
-//     // This effect runs when fetchActiveReduction changes (once on mount)
-//     // or when activeReduction.id changes (e.g., if a new pledge becomes active)
-//     initializeReductionData();
-//   }, [fetchActiveReduction, activeReduction?.id]);
-
-//   // --- Render Logic ---
-
-//   if (loadingReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>Loading your reduction period...</Text>
-//       </View>
-//     );
-//   }
-
-//   if (reductionFetchError) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={[styles.text, { color: "red" }]}>
-//           {reductionFetchError}
-//         </Text>
-//       </View>
-//     );
-//   }
-
-//   if (!activeReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>No active reduction period found.</Text>
-//       </View>
-//     );
-//   }
-
-//   const {
-//     target,
-//     start_date,
-//     end_date,
-//     duration,
-//     days_dry,
-//     days_wet,
-//     missed_days,
-//   } = activeReduction;
-
-//   return (
-//     <View style={styles.container}>
-//       {/* Display Current Virtual Day (for testing) */}
-//       <Text style={styles.text}>
-//         Current Virtual Day:{" "}
-//         {status.currentVirtualDay !== -1
-//           ? status.currentVirtualDay
-//           : "Loading..."}
-//       </Text>
-
-//       <Text style={styles.text}>
-//         Reduction Period: {duration} day{duration !== 1 ? "s" : ""}
-//       </Text>
-//       <Text style={styles.text}>Target Alcohol-Free Days: {target}</Text>
-//       <Text style={styles.text}>
-//         Start Date: {formatDateToLocalWithTZ(start_date)}
-//       </Text>
-//       <Text style={styles.text}>
-//         End Date: {formatDateToLocalWithTZ(end_date)}
-//       </Text>
-
-//       <Text style={styles.text}>Days Dry: {days_dry}</Text>
-//       <Text style={styles.text}>Days Wet: {days_wet}</Text>
-//       <Text style={styles.text}>Missed Days: {missed_days}</Text>
-
-//       {checkInError && (
-//         <Text style={[styles.text, { color: "red", marginTop: 10 }]}>
-//           Error checking in: {checkInError}
-//         </Text>
-//       )}
-
-//       {/* Conditional Buttons based on `status` from the hook */}
-//       {!status.pledgeActive ? (
-//         <Text style={styles.text}>Start a new pledge to check in.</Text>
-//       ) : (
-//         <>
-//           {/* Check-in for TODAY's virtual day */}
-//           {status.canCheckInToday ? (
-//             <View>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.currentVirtualDay}:
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.currentVirtualDay)
-//                 }
-//                 // disabled={checkInLoading} // Re-enabled disabled prop
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.currentVirtualDay)
-//                 }
-//                 // disabled={checkInLoading} // Re-enabled disabled prop
-//               />
-//             </View>
-//           ) : (
-//             status.currentVirtualDay !== -1 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.currentVirtualDay}
-//               </Text>
-//             )
-//           )}
-
-//           {/* Check-in for YESTERDAY's virtual day (if within grace period) */}
-//           {status.canCheckInYesterday ? (
-//             <View style={{ marginTop: 15 }}>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.yesterdayVirtualDay} (Grace
-//                 Period):
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.yesterdayVirtualDay)
-//                 }
-//                 // disabled={checkInLoading} // Re-enabled disabled prop
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.yesterdayVirtualDay)
-//                 }
-//                 // disabled={checkInLoading} // Re-enabled disabled prop
-//               />
-//             </View>
-//           ) : (
-//             // Only show this message if yesterday was a valid day AND it's already checked in
-//             status.yesterdayVirtualDay >= 0 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.yesterdayVirtualDay}
-//               </Text>
-//             )
-//           )}
-//         </>
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 16,
-//   },
-//   text: {
-//     fontSize: 16,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//     marginVertical: 4,
-//   },
-// });
-
-//////////
-// import React, { useState, useEffect, useCallback, useMemo } from "react";
-// import { View, Text, StyleSheet } from "react-native";
-// import { supabase } from "@/lib/supabaseClient";
-// import { ReductionPeriod } from "@/types/reductionTypes";
-// import {
-//   formatDateToLocalWithTZ,
-//   getVirtualDayInfo,
-// } from "@/utils/dateHelpers";
-// import Button from "@/components/Button";
-// import { userCheckIn } from "@/hooks/userCheckIn";
-
-// export default function Current() {
-//   const [activeReduction, setActiveReduction] =
-//     useState<ReductionPeriod | null>(null);
-//   const [loadingReduction, setLoadingReduction] = useState(true);
-//   const [reductionFetchError, setReductionFetchError] = useState<string | null>(
-//     null
-//   );
-
-//   const {
-//     status,
-//     onCheckIn,
-//     loading: checkInLoading,
-//     error: checkInError,
-//   } = userCheckIn(activeReduction);
-
-//   const fetchActiveReduction = useCallback(async () => {
-//     setLoadingReduction(true);
-//     setReductionFetchError(null);
-
-//     try {
-//       const { data: userData, error: userError } =
-//         await supabase.auth.getUser();
-//       const user = userData?.user;
-
-//       if (userError || !user) {
-//         console.error(
-//           "No user logged in or error fetching user:",
-//           userError?.message || "User not found."
-//         );
-//         setReductionFetchError("Please log in to view your active pledge.");
-//         setLoadingReduction(false);
-//         return;
-//       }
-
-//       const { data, error } = await supabase
-//         .from("reductions")
-//         .select(
-//           `
-//           id,
-//           target,
-//           start_date,
-//           end_date,
-//           duration,
-//           days_dry,
-//           days_wet,
-//           missed_days,
-//           status
-//         `
-//         )
-//         .eq("user_id", user.id)
-//         .eq("status", "active")
-//         .order("start_date", { ascending: false })
-//         .limit(1);
-
-//       if (error) throw error;
-
-//       setActiveReduction(data?.[0] || null);
-//     } catch (error: any) {
-//       console.error("Error fetching active reduction:", error.message);
-//       setReductionFetchError(`Failed to load pledge: ${error.message}`);
-//       setActiveReduction(null);
-//     } finally {
-//       setLoadingReduction(false);
-//     }
-//   }, []); // useCallback with empty deps means it's stable
-
-//   const handleCheckInAndRefresh = async (
-//     type: "dry" | "wet",
-//     targetDay: number
-//   ) => {
-//     if (!activeReduction?.id) return;
-
-//     await onCheckIn(type, targetDay);
-
-//     const { error: missedDaysError } = await supabase.rpc(
-//       "update_missed_days_for_reduction",
-//       { p_reduction_id: activeReduction.id }
-//     );
-//     if (missedDaysError) {
-//       console.error("Error updating missed days:", missedDaysError.message);
-//     }
-
-//     await fetchActiveReduction();
-//   };
-
-//   // --- START OF REFINED USEEFFECT STRUCTURE ---
-
-//   // Effect 1: Primary fetch for the active reduction on component mount
-//   // and whenever fetchActiveReduction changes (which is essentially once on mount because it's memoized).
-//   // This ensures `activeReduction` state is populated as soon as possible.
-//   useEffect(() => {
-//     const loadInitialReduction = async () => {
-//       console.log("useEffect 1: Loading initial reduction data...");
-//       await fetchActiveReduction();
-//     };
-//     loadInitialReduction();
-//   }, [fetchActiveReduction]);
-
-//   // Effect 2: Triggers the missed days RPC and a final re-fetch
-//   // This effect runs *only when* activeReduction.id becomes available or changes.
-//   // It ensures the RPC is called with a valid reduction ID and updates the UI after.
-//   useEffect(() => {
-//     if (activeReduction?.id) {
-//       const updateAndRefetchMissedDays = async () => {
-//         console.log(
-//           "useEffect 2: Calling update_missed_days_for_reduction for ID:",
-//           activeReduction.id
-//         );
-//         const { error: missedDaysInitialError } = await supabase.rpc(
-//           "update_missed_days_for_reduction",
-//           { p_reduction_id: activeReduction.id }
-//         );
-//         if (missedDaysInitialError) {
-//           console.error(
-//             "Error on initial update of missed days:",
-//             missedDaysInitialError.message
-//           );
-//         }
-//         // Re-fetch to get the newly updated missed_days (and other stats if they changed due to RPC)
-//         console.log(
-//           "useEffect 2: Re-fetching active reduction after RPC call."
-//         );
-//         await fetchActiveReduction();
-//       };
-//       updateAndRefetchMissedDays();
-//     }
-//   }, [activeReduction?.id, fetchActiveReduction]); // Depend on activeReduction.id to trigger when ID is set or changes
-
-//   // --- END OF REFINED USEEFFECT STRUCTURE ---
-
-//   if (loadingReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>Loading your reduction period...</Text>
-//       </View>
-//     );
-//   }
-
-//   if (reductionFetchError) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={[styles.text, { color: "red" }]}>
-//           {reductionFetchError}
-//         </Text>
-//       </View>
-//     );
-//   }
-
-//   if (!activeReduction) {
-//     return (
-//       <View style={styles.container}>
-//         <Text style={styles.text}>No active reduction period found.</Text>
-//       </View>
-//     );
-//   }
-
-//   const {
-//     target,
-//     start_date,
-//     end_date,
-//     duration,
-//     days_dry,
-//     days_wet,
-//     missed_days,
-//   } = activeReduction;
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.text}>
-//         Current Virtual Day:{" "}
-//         {status.currentVirtualDay !== -1
-//           ? status.currentVirtualDay
-//           : "Loading..."}
-//       </Text>
-
-//       <Text style={styles.text}>
-//         Reduction Period: {duration} day{duration !== 1 ? "s" : ""}
-//       </Text>
-//       <Text style={styles.text}>Target Alcohol-Free Days: {target}</Text>
-//       <Text style={styles.text}>
-//         Start Date: {formatDateToLocalWithTZ(start_date)}
-//       </Text>
-//       <Text style={styles.text}>
-//         End Date: {formatDateToLocalWithTZ(end_date)}
-//       </Text>
-
-//       <Text style={styles.text}>Days Dry: {days_dry}</Text>
-//       <Text style={styles.text}>Days Wet: {days_wet}</Text>
-//       <Text style={styles.text}>Missed Days: {missed_days}</Text>
-
-//       {checkInError && (
-//         <Text style={[styles.text, { color: "red", marginTop: 10 }]}>
-//           Error checking in: {checkInError}
-//         </Text>
-//       )}
-
-//       {!status.pledgeActive ? (
-//         <Text style={styles.text}>Start a new pledge to check in.</Text>
-//       ) : (
-//         <>
-//           {status.canCheckInToday ? (
-//             <View>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.currentVirtualDay}:
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.currentVirtualDay)
-//                 }
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Today"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.currentVirtualDay)
-//                 }
-//               />
-//             </View>
-//           ) : (
-//             status.currentVirtualDay !== -1 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.currentVirtualDay}
-//               </Text>
-//             )
-//           )}
-
-//           {status.canCheckInYesterday ? (
-//             <View style={{ marginTop: 15 }}>
-//               <Text style={styles.text}>
-//                 Check in for Virtual Day {status.yesterdayVirtualDay} (Grace
-//                 Period):
-//               </Text>
-//               <Button
-//                 label="No Alcohol (Dry) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("dry", status.yesterdayVirtualDay)
-//                 }
-//               />
-//               <Button
-//                 label="Alcohol (Wet) - Yesterday"
-//                 onPress={() =>
-//                   handleCheckInAndRefresh("wet", status.yesterdayVirtualDay)
-//                 }
-//               />
-//             </View>
-//           ) : (
-//             status.yesterdayVirtualDay >= 0 && (
-//               <Text style={styles.text}>
-//                 ✅ Checked in for Virtual Day {status.yesterdayVirtualDay}
-//               </Text>
-//             )
-//           )}
-//         </>
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 16,
-//   },
-//   text: {
-//     fontSize: 16,
-//     textAlign: "center",
-//     fontWeight: "300",
-//     fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-//     letterSpacing: 0.7,
-//     marginVertical: 4,
-//   },
-// });
-////////////////////////////////////
-
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { supabase } from "@/lib/supabaseClient";
 import { ReductionPeriod } from "@/types/reductionTypes";
-import {
-  formatDateToLocalWithTZ,
-  getVirtualDayInfo,
-} from "@/utils/dateHelpers"; // Assuming getVirtualDayInfo is used elsewhere
+import { formatDateToLocalWithTZ } from "@/utils/dateHelpers";
 import Button from "@/components/Button";
 import { userCheckIn } from "@/hooks/userCheckIn";
 
-export default function App() {
-  // Renamed to App for immersive compatibility
+export default function Current() {
   const [activeReduction, setActiveReduction] =
     useState<ReductionPeriod | null>(null);
-  const [loadingReduction, setLoadingReduction] = useState(true);
-  const [reductionFetchError, setReductionFetchError] = useState<string | null>(
-    null
-  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const {
-    status,
     onCheckIn,
     loading: checkInLoading,
     error: checkInError,
   } = userCheckIn(activeReduction);
 
-  const fetchActiveReduction = useCallback(async () => {
-    console.log("fetchActiveReduction: Starting fetch...");
-    setLoadingReduction(true);
-    setReductionFetchError(null);
-
+  const fetchActiveReduction = async () => {
     try {
+      console.log("🔍 Fetching active reduction...");
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
       const user = userData?.user;
 
       if (userError || !user) {
-        console.error(
-          "fetchActiveReduction: No user logged in or error fetching user:",
-          userError?.message || "User not found."
-        );
-        setReductionFetchError("Please log in to view your active pledge.");
-        setLoadingReduction(false);
+        console.log("❌ User not logged in:", userError?.message);
+        setError("Please log in to view your active pledge.");
         return;
       }
 
-      console.log("fetchActiveReduction: Querying reductions table...");
+      console.log("✅ User logged in:", user.id);
+
       const { data, error } = await supabase
         .from("reductions")
         .select(
@@ -1050,6 +45,7 @@ export default function App() {
           days_dry,
           days_wet,
           missed_days,
+          current_streak,
           status
         `
         )
@@ -1058,127 +54,37 @@ export default function App() {
         .order("start_date", { ascending: false })
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.log("❌ Database error:", error.message);
+        throw error;
+      }
 
-      const fetchedReduction = data?.[0] || null;
-      setActiveReduction(fetchedReduction);
-      console.log(
-        "fetchActiveReduction: Fetched reduction. Missed Days:",
-        fetchedReduction?.missed_days
-      );
+      console.log("📊 Query result:", data);
+      setActiveReduction(data?.[0] || null);
     } catch (error: any) {
-      console.error(
-        "fetchActiveReduction: Error fetching active reduction:",
-        error.message
-      );
-      setReductionFetchError(`Failed to load pledge: ${error.message}`);
-      setActiveReduction(null);
+      console.log("❌ Fetch error:", error.message);
+      setError(`Failed to load pledge: ${error.message}`);
     } finally {
-      setLoadingReduction(false);
-      console.log("fetchActiveReduction: Fetch completed.");
+      setLoading(false);
     }
-  }, []); // useCallback with empty deps means it's stable
-
-  const handleCheckInAndRefresh = async (
-    type: "dry" | "wet",
-    targetDay: number
-  ) => {
-    if (!activeReduction?.id) {
-      console.warn("handleCheckInAndRefresh: No active reduction ID found.");
-      return;
-    }
-
-    console.log(
-      `handleCheckInAndRefresh: Performing check-in for day ${targetDay} as ${type}...`
-    );
-    await onCheckIn(type, targetDay);
-    console.log("handleCheckInAndRefresh: Check-in operation complete.");
-
-    console.log(
-      "handleCheckInAndRefresh: Calling update_missed_days_for_reduction RPC..."
-    );
-    const { error: missedDaysError } = await supabase.rpc(
-      "update_missed_days_for_reduction",
-      { p_reduction_id: activeReduction.id }
-    );
-    if (missedDaysError) {
-      console.error(
-        "handleCheckInAndRefresh: Error updating missed days via RPC:",
-        missedDaysError.message
-      );
-    } else {
-      console.log(
-        "handleCheckInAndRefresh: update_missed_days_for_reduction RPC called successfully."
-      );
-    }
-
-    // Add a small delay to allow database transaction to fully commit and propagate
-    console.log("handleCheckInAndRefresh: Waiting 500ms before re-fetching...");
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log(
-      "handleCheckInAndRefresh: Re-fetching active reduction after RPC call."
-    );
-    await fetchActiveReduction();
   };
 
-  // Effect 1: Primary fetch for the active reduction on component mount
   useEffect(() => {
-    const loadInitialReduction = async () => {
-      console.log("useEffect 1: Loading initial reduction data...");
-      await fetchActiveReduction();
-    };
-    loadInitialReduction();
-  }, [fetchActiveReduction]);
+    fetchActiveReduction();
+  }, []);
 
-  // Effect 2: Triggers the missed days RPC and a final re-fetch
-  useEffect(() => {
-    if (activeReduction?.id) {
-      const updateAndRefetchMissedDays = async () => {
-        console.log(
-          "useEffect 2: Calling update_missed_days_for_reduction for ID:",
-          activeReduction.id
-        );
-        const { error: missedDaysInitialError } = await supabase.rpc(
-          "update_missed_days_for_reduction",
-          { p_reduction_id: activeReduction.id }
-        );
-        if (missedDaysInitialError) {
-          console.error(
-            "useEffect 2: Error on initial update of missed days:",
-            missedDaysInitialError.message
-          );
-        } else {
-          console.log("useEffect 2: Initial update RPC called successfully.");
-        }
-
-        // Add a small delay to allow database transaction to fully commit and propagate
-        console.log("useEffect 2: Waiting 500ms before re-fetching...");
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        console.log(
-          "useEffect 2: Re-fetching active reduction after RPC call."
-        );
-        await fetchActiveReduction();
-      };
-      updateAndRefetchMissedDays();
-    }
-  }, [activeReduction?.id, fetchActiveReduction]);
-
-  if (loadingReduction) {
+  if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>Loading your reduction period...</Text>
+        <Text style={styles.text}>Loading your pledge...</Text>
       </View>
     );
   }
 
-  if (reductionFetchError) {
+  if (error) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.text, { color: "red" }]}>
-          {reductionFetchError}
-        </Text>
+        <Text style={[styles.text, { color: "red" }]}>{error}</Text>
       </View>
     );
   }
@@ -1186,7 +92,7 @@ export default function App() {
   if (!activeReduction) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>No active reduction period found.</Text>
+        <Text style={styles.text}>No active pledge found.</Text>
       </View>
     );
   }
@@ -1199,95 +105,57 @@ export default function App() {
     days_dry,
     days_wet,
     missed_days,
+    current_streak,
   } = activeReduction;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>
-        Current Virtual Day:{" "}
-        {status.currentVirtualDay !== -1
-          ? status.currentVirtualDay
-          : "Loading..."}
-      </Text>
+      <Text style={styles.title}>Your Active Pledge</Text>
 
       <Text style={styles.text}>
-        Reduction Period: {duration} day{duration !== 1 ? "s" : ""}
+        Duration: {duration} day{duration !== 1 ? "s" : ""}
       </Text>
-      <Text style={styles.text}>Target Alcohol-Free Days: {target}</Text>
+      <Text style={styles.text}>Target: {target} alcohol-free days</Text>
       <Text style={styles.text}>
-        Start Date: {formatDateToLocalWithTZ(start_date)}
+        Started: {formatDateToLocalWithTZ(start_date)}
       </Text>
-      <Text style={styles.text}>
-        End Date: {formatDateToLocalWithTZ(end_date)}
-      </Text>
+      <Text style={styles.text}>Ends: {formatDateToLocalWithTZ(end_date)}</Text>
 
-      <Text style={styles.text}>Days Dry: {days_dry}</Text>
-      <Text style={styles.text}>Days Wet: {days_wet}</Text>
-      <Text style={styles.text}>Missed Days: {missed_days}</Text>
+      <View style={styles.statsContainer}>
+        <Text style={styles.statsText}>Days Dry: {days_dry || 0}</Text>
+        <Text style={styles.statsText}>Days Wet: {days_wet || 0}</Text>
+        <Text style={styles.statsText}>Missed: {missed_days || 0}</Text>
+        <Text style={styles.statsText}>Streak: {current_streak || 0}</Text>
+      </View>
 
-      {checkInError && (
-        <Text style={[styles.text, { color: "red", marginTop: 10 }]}>
-          Error checking in: {checkInError}
-        </Text>
-      )}
+      <View style={styles.buttonContainer}>
+        <Text style={styles.text}>Check in for today:</Text>
+        <Button label="No Alcohol (Dry)" onPress={() => onCheckIn("dry")} />
+        <Button label="Had Alcohol (Wet)" onPress={() => onCheckIn("wet")} />
+        <Button
+          label="🔄 Refresh Data"
+          onPress={() => fetchActiveReduction()}
+        />
+      </View>
 
-      {!status.pledgeActive ? (
-        <Text style={styles.text}>Start a new pledge to check in.</Text>
-      ) : (
-        <>
-          {status.canCheckInToday ? (
-            <View>
-              <Text style={styles.text}>
-                Check in for Virtual Day {status.currentVirtualDay}:
-              </Text>
-              <Button
-                label="No Alcohol (Dry) - Today"
-                onPress={() =>
-                  handleCheckInAndRefresh("dry", status.currentVirtualDay)
-                }
-              />
-              <Button
-                label="Alcohol (Wet) - Today"
-                onPress={() =>
-                  handleCheckInAndRefresh("wet", status.currentVirtualDay)
-                }
-              />
-            </View>
-          ) : (
-            status.currentVirtualDay !== -1 && (
-              <Text style={styles.text}>
-                ✅ Checked in for Virtual Day {status.currentVirtualDay}
-              </Text>
-            )
-          )}
-
-          {status.canCheckInYesterday ? (
-            <View style={{ marginTop: 15 }}>
-              <Text style={styles.text}>
-                Check in for Virtual Day {status.yesterdayVirtualDay} (Grace
-                Period):
-              </Text>
-              <Button
-                label="No Alcohol (Dry) - Yesterday"
-                onPress={() =>
-                  handleCheckInAndRefresh("dry", status.yesterdayVirtualDay)
-                }
-              />
-              <Button
-                label="Alcohol (Wet) - Yesterday"
-                onPress={() =>
-                  handleCheckInAndRefresh("wet", status.yesterdayVirtualDay)
-                }
-              />
-            </View>
-          ) : (
-            status.yesterdayVirtualDay >= 0 && (
-              <Text style={styles.text}>
-                ✅ Checked in for Virtual Day {status.yesterdayVirtualDay}
-              </Text>
-            )
-          )}
-        </>
+      {/* Grace Period Section */}
+      {missed_days > 0 && (
+        <View style={styles.gracePeriodContainer}>
+          <Text style={styles.text}>
+            Grace Period - Check in for previous days:
+          </Text>
+          <Button
+            label="No Alcohol (Dry) - Previous Day"
+            onPress={() => onCheckIn("dry")}
+          />
+          <Button
+            label="Had Alcohol (Wet) - Previous Day"
+            onPress={() => onCheckIn("wet")}
+          />
+          <Text style={styles.smallText}>
+            You can update missed days to dry/wet within the grace period
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -1298,14 +166,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 16,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
   },
   text: {
     fontSize: 16,
     textAlign: "center",
-    fontWeight: "300",
-    fontFamily: 'IonEina, "Helvetica Neue", Helvetica, sans-serif',
-    letterSpacing: 0.7,
     marginVertical: 4,
+  },
+  statsContainer: {
+    marginVertical: 20,
+    padding: 15,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    width: "100%",
+  },
+  statsText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginVertical: 2,
+    fontWeight: "500",
+  },
+  buttonContainer: {
+    marginTop: 20,
+    width: "100%",
+  },
+  gracePeriodContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    width: "100%",
+  },
+  smallText: {
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 10,
+    color: "#666",
   },
 });

@@ -132,9 +132,9 @@
 // utils/dateHelpers.ts
 
 // IMPORTANT: This constant MUST match the MS_PER_SIMULATED_DAY_CONST in your PostgreSQL function
-// For testing: 10000 (10 seconds)
+// For testing: 60000 (1 minute)
 // For production: 86400000 (24 hours)
-export const MS_PER_SIMULATED_DAY = 10000; // Using 10 seconds for current testing
+export const MS_PER_SIMULATED_DAY = 60000; // Using 1 minute for current testing
 
 /**
  * Calculates the current virtual day number based on a start date and the simulated day duration.

@@ -1,8 +1,8 @@
-export const MS_PER_SIMULATED_DAY = 10 * 1000; // 10 seconds = 1 simulated day
+export const MS_PER_SIMULATED_DAY = 60 * 1000; // 60 seconds = 1 simulated day
 
-export const GRACE_PERIOD_MS = 10000;
+export const GRACE_PERIOD_MS = 60000; // 60 seconds grace period
 
-export const EDGE_CASE_GRACE_MS = 10000; // edge case grace only
+export const EDGE_CASE_GRACE_MS = 60000; // edge case grace only
 
 // export const MS_PER_SIMULATED_DAY = 10000; // 10 seconds for testing
 // export const MS_GRACE_PERIOD = MS_PER_SIMULATED_DAY; // 1 simulated day grace, adjust as needed

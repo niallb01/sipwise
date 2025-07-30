@@ -24,6 +24,7 @@ export type ReductionPeriod = {
   days_dry: number;
   days_wet: number;
   missed_days: number;
+  current_streak: number;
   start_date: string;
   end_date: string;
 };

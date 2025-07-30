@@ -31,12 +31,18 @@ export function useReduction() {
     try {
       const user = await ensureUser();
 
-      const startDate = new Date();
+      // Set startDate 2 seconds in the future for reliable testing
+      const startDate = new Date(Date.now() + 2000);
 
       const durationDays = selectedDurationId ?? 0; // days
       const durationMs = durationDays * MS_PER_SIMULATED_DAY; // milliseconds
 
       const endDate = new Date(startDate.getTime() + durationMs); // correct endDate
+
+      console.log(`Creating pledge: ${durationDays} days = ${durationMs}ms`);
+      console.log(`Start: ${startDate.toISOString()}`);
+      console.log(`End: ${endDate.toISOString()}`);
+      console.log(`Duration: ${durationMs / 1000 / 60} minutes`);
 
       // CRUD - When a user starts a new pledge, you create a new record in the reductions table
       const { data, error } = await supabase
